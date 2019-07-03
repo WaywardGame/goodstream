@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "module": "commonjs",
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "target": "esnext",
+        "plugins": [
+            {
+                "name": "typescript-tslint-plugin"
+            }
+        ]
+    },
+    "include": [
+        "gulpfile.ts",
+        "gulp/**/*.ts"
+    ]
+}
