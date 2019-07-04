@@ -11,15 +11,20 @@ type Action<T> =
 	["map", (val: T) => any] |
 	["take", number] |
 	["takeWhile", (val: T) => boolean] |
+	["takeUntil", (val: T) => boolean] |
 	["drop", number] |
 	["dropWhile", (val: T) => boolean] |
-	["step", number, number];
+	["dropUntil", (val: T) => boolean] |
+	["step", number, number] |
+	[undefined, any?, any?];
 
 type Flat1<T> = T extends Iterable<infer X> ? X | Extract<T, string> | Exclude<T, Iterable<any>> : never;
 
-export interface UnzippedPartitions<K, V> {
+export interface UnzippedPartitions<K, V> extends Streamable<["key", Stream<K>] | ["value", Stream<V>]> {
 	get (partition: "key"): Stream<K>;
 	get (partition: "value"): Stream<V>;
+	keys (): Stream<K>;
+	values (): Stream<V>;
 	partitions (): Stream<["key", Stream<K>] | ["value", Stream<V>]>;
 }
 
@@ -234,6 +239,12 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	public abstract takeWhile (predicate: (val: T) => boolean): Stream<T>;
 
 	/**
+	 * Returns a Stream which will only iterate through the items in this Stream until the predicate matches.
+	 * @param predicate A predicate function that takes a Stream value and its index.
+	 */
+	public abstract takeUntil (predicate: (val: T) => boolean): Stream<T>;
+
+	/**
 	 * Returns a Stream which will skip the first X items, where X is the given argument.
 	 */
 	public abstract drop (amount: number): Stream<T>;
@@ -243,6 +254,12 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
 	public abstract dropWhile (predicate: (val: T) => boolean): Stream<T>;
+
+	/**
+	 * Returns a Stream which will skip the items in this Stream until the predicate matches.
+	 * @param predicate A predicate function that takes a Stream value and its index.
+	 */
+	public abstract dropUntil (predicate: (val: T) => boolean): Stream<T>;
 
 	/**
 	 * Returns a Stream which steps through the items in the current Stream using the provided step amount.
@@ -262,6 +279,9 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * @param comparator A function that returns a "difference" between `a` and `b`, for sorting by.
 	 */
 	public abstract sorted (comparator: (a: T, b: T) => number): Stream<T>;
+
+	// todo: in the future, consider implementing a sorting method that can do stuff like this:
+	// https://github.com/winterbe/sequency/blob/master/src/createComparatorFactory.ts
 
 	/**
 	 * Returns a new Stream which contains the contents of this Stream, in reverse order.
@@ -704,11 +724,13 @@ class StreamImplementation<T> extends Stream<T> {
 
 	private readonly iterators: (Iterator<T> | Streamable<T>)[];
 	private iteratorIndex = 0;
-	private readonly actions: Action<T>[] = [];
+	private actions: Action<T>[] = [];
 	private _value: T;
 	private _done = false;
 	private doneNext = false;
 	private readonly savedNext: T[] = [];
+	private actionsNeedDeleted = false;
+	private parent: StreamImplementation<T>;
 
 	@Override public get value () { return this._value; }
 	@Override public get done () { return this._done; }
@@ -746,29 +768,26 @@ class StreamImplementation<T> extends Stream<T> {
 	// Manipulation
 	//
 
-	@Override public filter (filter: (val: T) => any) {
+	@Override public filter (filter: (val: T) => any): Stream<any> {
 		if (this.savedNext.length) {
 			if (!filter(this.savedNext[0])) {
 				this.savedNext.pop();
 			}
 		}
 
-		this.actions.push(["filter", filter]);
-
-		return this as any;
+		return this.getWithAction(["filter", filter]);
 	}
 
 	@Override public filter2 (filter: (val: T) => any) {
 		return this.filter(filter);
 	}
 
-	@Override public map (mapper: (val: T) => any) {
-		this.actions.push(["map", mapper]);
-		if (this.savedNext.length) {
-			this.savedNext[0] = mapper(this.savedNext[0]);
-		}
+	@Override public map (mapper: (val: T) => any): Stream<any> {
+		const mappedStream = this.getWithAction(["map", mapper]);
+		if (mappedStream.savedNext.length)
+			mappedStream.savedNext[0] = mapper(this.savedNext[0]);
 
-		return this as any;
+		return mappedStream;
 	}
 
 	@Override public flatMap (mapper?: (value: T) => Iterable<any>) {
@@ -776,18 +795,19 @@ class StreamImplementation<T> extends Stream<T> {
 	}
 
 	@Override public take (amount: number) {
+		if (amount < 0 || !Number.isInteger(amount))
+			throw new Error("Number of items to take must be a positive integer.");
+
 		if (amount === 0) {
-			this._done = true;
+			return Stream.empty<T>();
 
-		} else {
-			if (this.savedNext.length) {
-				amount--;
-			}
-
-			this.actions.push(["take", amount]);
 		}
 
-		return this;
+		if (this.savedNext.length) {
+			amount--;
+		}
+
+		return this.getWithAction(["take", amount]);
 	}
 
 	@Override public takeWhile (predicate: (val: T) => boolean) {
@@ -797,22 +817,31 @@ class StreamImplementation<T> extends Stream<T> {
 			}
 		}
 
-		this.actions.push(["takeWhile", predicate]);
+		return this.getWithAction(["takeWhile", predicate]);
+	}
 
-		return this;
+	@Override public takeUntil (predicate: (val: T) => boolean) {
+		if (this.savedNext.length) {
+			if (predicate(this.savedNext[0])) {
+				this._done = true;
+			}
+		}
+
+		return this.getWithAction(["takeUntil", predicate]);
 	}
 
 	@Override public drop (amount: number) {
-		if (amount > 0) {
-			if (this.savedNext.length) {
-				amount--;
-				this.savedNext.pop();
-			}
+		if (amount < 0 || !Number.isInteger(amount))
+			throw new Error("Number of items to take must be a positive integer.");
 
-			this.actions.push(["drop", amount]);
+		if (amount === 0) return this;
+
+		if (this.savedNext.length) {
+			amount--;
+			this.savedNext.pop();
 		}
 
-		return this;
+		return this.getWithAction(["drop", amount]);
 	}
 
 	@Override public dropWhile (predicate: (val: T) => boolean) {
@@ -825,19 +854,33 @@ class StreamImplementation<T> extends Stream<T> {
 			}
 		}
 
-		this.actions.push(["dropWhile", predicate]);
+		return this.getWithAction(["dropWhile", predicate]);
+	}
 
-		return this;
+	@Override public dropUntil (predicate: (val: T) => boolean) {
+		if (this.savedNext.length) {
+			if (!predicate(this.savedNext[0])) {
+				this.savedNext.pop();
+
+			} else {
+				return this;
+			}
+		}
+
+		return this.getWithAction(["dropUntil", predicate]);
 	}
 
 	@Override public step (step: number) {
-		if (step === 1) {
+		if (step === 1)
+			// a step of 1 is default
 			return this;
-		}
 
-		if (step <= 0) {
+		if (step <= 0)
+			// negative iteration is going to require getting the full array anyway, so we just reuse the array step functionality
 			return Stream.values(this.toArray(), step);
-		}
+
+		if (!Number.isInteger(step))
+			throw new Error("Streams can only be stepped through with a nonzero integer.");
 
 		let current = step;
 		if (this.savedNext.length) {
@@ -845,9 +888,7 @@ class StreamImplementation<T> extends Stream<T> {
 			current--;
 		}
 
-		this.actions.push(["step", current, step]);
-
-		return this;
+		return this.getWithAction(["step", current, step]);
 	}
 
 	@Override public sorted (comparator?: (a: T, b: T) => number) {
@@ -871,7 +912,7 @@ class StreamImplementation<T> extends Stream<T> {
 	}
 
 	@Override public unzip (): any {
-		return new Partitions(this.flatMap(), (value, index) => index % 2 ? "value" : "key", partitionStream => new StreamImplementation(partitionStream));
+		return new UnzippedPartitionsImplementation(this.flatMap());
 	}
 
 	@Override public add (...items: any[]) {
@@ -1319,6 +1360,12 @@ class StreamImplementation<T> extends Stream<T> {
 				continue;
 			}
 
+			if (this.actionsNeedDeleted) {
+				// delete any unused actions
+				this.actions = this.actions.filter(([actionType]) => actionType !== undefined);
+				this.actionsNeedDeleted = false;
+			}
+
 			for (const action of this.actions) {
 				switch (action[0]) {
 					case "filter": {
@@ -1349,18 +1396,33 @@ class StreamImplementation<T> extends Stream<T> {
 						break;
 					}
 					case "drop": {
+						// this is one more item to encounter, so we skip it and reduce the number we still need to skip by one
 						const amount = action[1]--;
-						if (amount > 0) {
-							// todo: remove this action at 1 for efficiency
-							continue FindNext;
-						}
 
+						// mark action for deletion when it won't need to be used anymore
+						if (amount === 1) (action as Action<T>)[0] = undefined;
+
+						// if there's more than zero items to drop, we skip this item and find the next
+						if (amount > 0) continue FindNext;
+
+						// the code should never get to this point
 						break;
 					}
 					case "takeWhile": {
 						const predicate = action[1];
 						if (!predicate(this._value)) {
 							this._done = true;
+							if (this.parent) this.parent.restreamCurrent();
+							return;
+						}
+
+						break;
+					}
+					case "takeUntil": {
+						const predicate = action[1];
+						if (predicate(this._value)) {
+							this._done = true;
+							if (this.parent) this.parent.restreamCurrent();
 							return;
 						}
 
@@ -1368,11 +1430,25 @@ class StreamImplementation<T> extends Stream<T> {
 					}
 					case "dropWhile": {
 						const predicate = action[1];
-						if (predicate(this._value)) {
+						if (predicate!(this._value)) {
 							continue FindNext;
 						}
 
-						// todo: remove this action for efficiency
+						// we delete the action name, marking this action for removal
+						(action as Action<T>)[0] = undefined;
+						this.actionsNeedDeleted = true;
+
+						break;
+					}
+					case "dropUntil": {
+						const predicate = action[1];
+						if (!predicate!(this._value)) {
+							continue FindNext;
+						}
+
+						// we delete the predicate, marking this action for removal
+						(action as Action<T>)[0] = undefined;
+						this.actionsNeedDeleted = true;
 
 						break;
 					}
@@ -1417,6 +1493,18 @@ class StreamImplementation<T> extends Stream<T> {
 
 		return true;
 	}
+
+	private restreamCurrent () {
+		this.savedNext.push(this._value);
+		if (this.parent) this.parent.restreamCurrent();
+	}
+
+	private getWithAction (action: Action<T>): StreamImplementation<any> {
+		const newStream = new StreamImplementation(this);
+		newStream.actions.push(action);
+		newStream.parent = this;
+		return newStream;
+	}
 }
 
 class InternalArrayStream<T> {
@@ -1459,5 +1547,22 @@ class ArrayEntriesStream<T> extends InternalArrayStream<T> implements Streamable
 	public get value () { return tuple(this.index, this.array[this.index]); }
 	public constructor (array: T[], step: number) {
 		super(array, step);
+	}
+}
+
+class UnzippedPartitionsImplementation<K, V> extends Partitions<any, any> implements UnzippedPartitions<K, V> {
+	public constructor (stream: StreamImplementation<[K, V]>) {
+		super(stream.flatMap(), (value, index) => index % 2 ? "value" : "key", partitionStream => new StreamImplementation(partitionStream));
+		// initialize partitions for "key" and "value" so they appear in the `.partitions()` stream
+		this.get("key");
+		this.get("value");
+	}
+
+	public keys (): Stream<K> {
+		return this.get("key");
+	}
+
+	public values (): Stream<V> {
+		return this.get("value");
 	}
 }

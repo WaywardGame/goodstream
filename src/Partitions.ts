@@ -1,7 +1,7 @@
 import { Streamable } from "./IStream";
 import Stream from "./Stream";
 
-export default class Partitions<T, K> {
+export default class Partitions<T, K> implements Streamable<[K, Stream<T>]> {
 
 	private readonly _partitions: Map<K, [Partition<T>, Stream<T>]> = new Map();
 	private readonly partitionKeys: K[] = [];
