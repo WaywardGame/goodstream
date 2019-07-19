@@ -446,6 +446,27 @@ describe("Stream", () => {
 			it("should add new items to the end of the stream", () => {
 				expect([...Stream.range(3).add()]).ordered.members([0, 1, 2]);
 				expect([...Stream.empty().add(3, 4, 5)]).ordered.members([3, 4, 5]);
+				expect([...Stream.range(3).add(3, 4, 5)]).ordered.members([0, 1, 2, 3, 4, 5]);
+			});
+		});
+
+		describe("'insert'", () => {
+			it("should insert new items to the beginning of the stream", () => {
+				expect([...Stream.range(3).insert()]).ordered.members([0, 1, 2]);
+				expect([...Stream.empty().insert(3, 4, 5)]).ordered.members([3, 4, 5]);
+				expect([...Stream.range(3).insert(3, 4, 5)]).ordered.members([3, 4, 5, 0, 1, 2]);
+			});
+		});
+
+		describe("'insertAt'", () => {
+			it("should insert new items into the stream", () => {
+				expect([...Stream.range(3).insertAt(1)]).ordered.members([0, 1, 2]);
+				expect([...Stream.range(3).insertAt(1, 3, 4, 5)]).ordered.members([0, 3, 4, 5, 1, 2]);
+			});
+
+			it("should add to the end of the stream when the position is after the stream's other contents", () => {
+				expect([...Stream.empty().insertAt(1, 3, 4, 5)]).ordered.members([3, 4, 5]);
+				expect([...Stream.range(3).insertAt(5, 3, 4, 5)]).ordered.members([0, 1, 2, 3, 4, 5]);
 			});
 		});
 

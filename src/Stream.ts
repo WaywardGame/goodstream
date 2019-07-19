@@ -323,6 +323,15 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	public abstract merge<N> (...iterables: (Stream<N> | Iterable<N>)[]): Stream<T | N>;
 
 	/**
+	 * Inserts the given items into the beginning of this Stream.
+	 */
+	public abstract insert<N> (...items: N[]): Stream<N | T>;
+	/**
+	 * Inserts the given items at the given index of this Stream.
+	 */
+	public abstract insertAt<N> (index: number, ...items: N[]): Stream<N | T>;
+
+	/**
 	 * Returns a new Stream of the same type, after first collecting this Stream into an array.
 	 *
 	 * Why is this useful? It can be used, for example, to prevent concurrent modification errors. Since it collects
@@ -592,7 +601,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Returns a value of type R, generated with the given collector function.
 	 * @param collector A function that takes the splatted values in this iterable, and returns type R
 	 */
-	public abstract splat<R> (collector: (...args: T[]) => R): R;
+	public abstract splat<R> (collector: (...args: T[]) => R, ...args: T[]): R;
 
 	/**
 	 * Returns a promise that will return the value of the first completed promise in this stream.
@@ -616,6 +625,17 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Appends the items in this Stream to the end of the given array.
 	 */
 	public abstract toArray<N> (array: N[]): (T | N)[];
+	/**
+	 * Collects the items in this Stream to an array, using a mapping function.
+	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
+	 */
+	public abstract toArray<M> (mapper: (value: T, index: number) => M): M[];
+	/**
+	 * Appends the items in this Stream to the end of the given array, using a mapping function.
+	 * @param array The array to insert into.
+	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
+	 */
+	public abstract toArray<N, M> (array: N[], mapper: (value: T, index: number) => M): (T | N | M)[];
 
 	/**
 	 * Collects the items in this Stream to a Set.
@@ -625,6 +645,17 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Appends the items in this Stream to the end of the given Set.
 	 */
 	public abstract toSet<N> (set: Set<N>): Set<T | N>;
+	/**
+	 * Collects the items in this Stream to a Set, using a mapping function.
+	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
+	 */
+	public abstract toSet<M> (mapper: (value: T, index: number) => M): Set<M>;
+	/**
+	 * Appends the items in this Stream to the end of the given Set, using a mapping function.
+	 * @param set The set to insert into.
+	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
+	 */
+	public abstract toSet<N, M> (set: Set<N>, mapper: (value: T, index: number) => M): Set<T | N | M>;
 
 	/**
 	 * Constructs a Map instance from the key-value pairs in this Stream.
@@ -715,6 +746,11 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * @param user The function to call for each item
 	 */
 	public abstract forEach (user: (val: T, index: number) => any): void;
+	/**
+	 * Runs a function on each item in this Stream.
+	 * @param user The function to call for each item
+	 */
+	public abstract splatEach (user: T extends any[] ? ((...args: T) => any) : never): void;
 
 	public abstract next (): void;
 
@@ -734,6 +770,7 @@ type Action<T> =
 	["dropWhile", (val: T) => unknown] |
 	["dropUntil", (val: T) => unknown] |
 	["step", number, number] |
+	["insert", number, any[]] |
 	[undefined, any?, any?];
 
 class StreamImplementation<T> extends Stream<T> {
@@ -933,6 +970,14 @@ class StreamImplementation<T> extends Stream<T> {
 
 	@Override public add (...items: any[]) {
 		return new StreamImplementation<any>(this, items[Symbol.iterator]());
+	}
+
+	@Override public insert (...items: any[]) {
+		return new StreamImplementation(items[Symbol.iterator](), this);
+	}
+
+	@Override public insertAt (index: number, ...items: any[]) {
+		return this.getWithAction(["insert", index, items]);
 	}
 
 	@Override public merge (...iterables: Iterable<any>[]) {
@@ -1214,12 +1259,12 @@ class StreamImplementation<T> extends Stream<T> {
 		return choice([...this], random)!;
 	}
 
-	@Override public collect<R> (collector: (stream: Stream<T>) => R): R {
-		return collector(this);
+	@Override public collect<R, A extends any[]> (collector: (stream: Stream<T>, ...args: A) => R, ...args: A): R {
+		return collector(this, ...args);
 	}
 
-	@Override public splat<R> (collector: (...values: T[]) => R): R {
-		return collector(...this.toArray());
+	@Override public splat<R> (collector: (...values: T[]) => R, ...args: T[]): R {
+		return collector(...this.toArray(), ...args);
 	}
 
 	@Override public async race (): Promise<any> {
@@ -1232,27 +1277,43 @@ class StreamImplementation<T> extends Stream<T> {
 
 	public toArray (): T[];
 	public toArray<N> (array: N[]): (T | N)[];
-	@Override public toArray (result: any[] = []) {
+	public toArray<M> (mapper: (value: T, index: number) => M): M[];
+	public toArray<N, M> (array: N[], mapper: (value: T, index: number) => M): (T | N | M)[];
+	@Override public toArray (result: any[] | ((value: any, index: number) => any) = [], mapper?: (value: any, index: number) => any): any {
+		if (typeof result === "function") {
+			mapper = result;
+			result = [];
+		}
+
+		let index = 0;
 		while (true) {
 			this.next();
 			if (this._done) {
-				return result;
+				return result as any;
 			}
 
-			result.push(this._value);
+			result.push(mapper ? mapper(this._value, index++) : this._value);
 		}
 	}
 
 	public toSet (): Set<T>;
 	public toSet<N> (set: Set<N>): Set<T | N>;
-	@Override public toSet (result: Set<any> = new Set()) {
+	public toSet<M> (mapper: (value: T, index: number) => M): Set<M>;
+	public toSet<N, M> (set: Set<N>, mapper: (value: T, index: number) => M): Set<T | N | M>;
+	@Override public toSet (result: Set<any> | ((value: any, index: number) => any) = new Set(), mapper?: (value: any, index: number) => any): any {
+		if (typeof result === "function") {
+			mapper = result;
+			result = new Set();
+		}
+
+		let index = 0;
 		while (true) {
 			this.next();
 			if (this._done) {
-				return result;
+				return result as any;
 			}
 
-			result.add(this._value);
+			result.add(mapper ? mapper(this._value, index++) : this._value);
 		}
 	}
 
@@ -1366,6 +1427,22 @@ class StreamImplementation<T> extends Stream<T> {
 		}
 	}
 
+	@Override public splatEach (user?: (...args: any[]) => any) {
+		while (true) {
+			this.next();
+			if (this._done) {
+				return;
+			}
+
+			const value = this._value;
+			if (!isIterable(value)) {
+				throw new Error(`This stream contains a non-iterable value (${value}), it can't be splatted into the user function.`);
+			}
+
+			user!(...value as any);
+		}
+	}
+
 	// tslint:disable-next-line cyclomatic-complexity
 	@Override public next () {
 		if (this.doneNext || this._done) {
@@ -1385,6 +1462,23 @@ class StreamImplementation<T> extends Stream<T> {
 			if (done) {
 				this.iteratorIndex++;
 				if (this.iteratorIndex >= this.iterators.length) {
+
+					////////////////////////////////////
+					// "Last Chance" actions — actions that can extend the stream
+					//
+					for (const action of this.actions) {
+						switch (action[0]) {
+							case "insert": {
+								this.iterators.push(action[2][Symbol.iterator]());
+								(action as Action<T>)[0] = undefined;
+								continue FindNext;
+							}
+						}
+					}
+
+					////////////////////////////////////
+					// We're out of values!
+					//
 					this._done = true;
 					return;
 				}
@@ -1502,6 +1596,20 @@ class StreamImplementation<T> extends Stream<T> {
 
 						// action[2] is the step size
 						action[1] = action[2];
+
+						break;
+					}
+					case "insert": {
+						// this is more to go before iterating over the inserted items, so we reduce the number remaining by one
+						const amount = action[1]--;
+
+						if (amount === 1) {
+							// mark action for deletion, it won't need to be used anymore
+							(action as Action<T>)[0] = undefined;
+
+							// we're inserting our replacement stuff next
+							this.iterators.splice(this.iteratorIndex, 0, action[2][Symbol.iterator]());
+						}
 
 						break;
 					}
