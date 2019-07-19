@@ -472,4 +472,275 @@ describe("Stream", () => {
 			});
 		});
 	});
+
+	describe("collection method", () => {
+
+		describe("'any'", () => {
+			it("should return whether any values match the predicate", () => {
+				expect(Stream.range(3).any(val => val === 2)).equal(true);
+				expect(Stream.range(3).any(val => val === 3)).equal(false);
+			});
+
+			it("should return false with an empty stream", () => {
+				expect(Stream.of().any(() => true)).equal(false);
+				expect(Stream.of().any(() => false)).equal(false);
+			});
+		});
+
+		describe("'some'", () => {
+			it("should return whether any values match the predicate", () => {
+				expect(Stream.range(3).some(val => val === 2)).equal(true);
+				expect(Stream.range(3).some(val => val === 3)).equal(false);
+			});
+
+			it("should return false with an empty stream", () => {
+				expect(Stream.of().some(() => true)).equal(false);
+				expect(Stream.of().some(() => false)).equal(false);
+			});
+		});
+
+		describe("'every'", () => {
+			it("should return whether all values match the predicate", () => {
+				expect(Stream.range(3).every(val => val < 2)).equal(false);
+				expect(Stream.range(3).every(val => val < 3)).equal(true);
+			});
+
+			it("should return true with an empty stream", () => {
+				expect(Stream.of().every(() => true)).equal(true);
+				expect(Stream.of().every(() => false)).equal(true);
+			});
+		});
+
+		describe("'all'", () => {
+			it("should return whether all values match the predicate", () => {
+				expect(Stream.range(3).all(val => val < 2)).equal(false);
+				expect(Stream.range(3).all(val => val < 3)).equal(true);
+			});
+
+			it("should return true with an empty stream", () => {
+				expect(Stream.of().all(() => true)).equal(true);
+				expect(Stream.of().all(() => false)).equal(true);
+			});
+		});
+
+		describe("'none'", () => {
+			it("should return whether no values match the predicate", () => {
+				expect(Stream.range(3).none(val => val === 2)).equal(false);
+				expect(Stream.range(3).none(val => val === 3)).equal(true);
+			});
+
+			it("should return true with an empty stream", () => {
+				expect(Stream.of().none(() => true)).equal(true);
+				expect(Stream.of().none(() => false)).equal(true);
+			});
+		});
+
+		describe("'includes'", () => {
+			it("should return whether the stream contains any of the given values", () => {
+				expect(Stream.range(3).includes(0)).equal(true);
+				expect(Stream.range(3).includes(4)).equal(false);
+				expect(Stream.range(3).includes(0, 4)).equal(true);
+				expect(Stream.range(3).includes(4, 0)).equal(true);
+				expect(Stream.range(3).includes(4, 5)).equal(false);
+				expect(Stream.range(3).includes(5, 4)).equal(false);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().includes()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of<number[]>().includes(1)).equal(false);
+			});
+		});
+
+		describe("'contains'", () => {
+			it("should return whether the stream contains any of the given values", () => {
+				expect(Stream.range(3).contains(0)).equal(true);
+				expect(Stream.range(3).contains(4)).equal(false);
+				expect(Stream.range(3).contains(0, 4)).equal(true);
+				expect(Stream.range(3).contains(4, 0)).equal(true);
+				expect(Stream.range(3).contains(4, 5)).equal(false);
+				expect(Stream.range(3).contains(5, 4)).equal(false);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().contains()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of<number[]>().contains(1)).equal(false);
+			});
+		});
+
+		describe("'has'", () => {
+			it("should return whether the stream contains any of the given values", () => {
+				expect(Stream.range(3).has(0)).equal(true);
+				expect(Stream.range(3).has(4)).equal(false);
+				expect(Stream.range(3).has(0, 4)).equal(true);
+				expect(Stream.range(3).has(4, 0)).equal(true);
+				expect(Stream.range(3).has(4, 5)).equal(false);
+				expect(Stream.range(3).has(5, 4)).equal(false);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().has()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of<number[]>().has(1)).equal(false);
+			});
+		});
+
+		describe("'includesAll'", () => {
+			it("should return whether the stream contains all of the given values", () => {
+				expect(Stream.range(3).includesAll(0)).equal(true);
+				expect(Stream.range(3).includesAll(4)).equal(false);
+				expect(Stream.range(3).includesAll(0, 4)).equal(false);
+				expect(Stream.range(3).includesAll(4, 0)).equal(false);
+				expect(Stream.range(3).includesAll(5, 4)).equal(false);
+				expect(Stream.range(3).includesAll(1, 2)).equal(true);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().includesAll()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of<number[]>().includesAll(1)).equal(false);
+			});
+		});
+
+		describe("'containsAll'", () => {
+			it("should return whether the stream contains all of the given values", () => {
+				expect(Stream.range(3).containsAll(0)).equal(true);
+				expect(Stream.range(3).containsAll(4)).equal(false);
+				expect(Stream.range(3).containsAll(0, 4)).equal(false);
+				expect(Stream.range(3).containsAll(4, 0)).equal(false);
+				expect(Stream.range(3).containsAll(5, 4)).equal(false);
+				expect(Stream.range(3).containsAll(1, 2)).equal(true);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().containsAll()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of<number[]>().containsAll(1)).equal(false);
+			});
+		});
+
+		describe("'hasAll'", () => {
+			it("should return whether the stream contains all of the given values", () => {
+				expect(Stream.range(3).hasAll(0)).equal(true);
+				expect(Stream.range(3).hasAll(4)).equal(false);
+				expect(Stream.range(3).hasAll(0, 4)).equal(false);
+				expect(Stream.range(3).hasAll(4, 0)).equal(false);
+				expect(Stream.range(3).hasAll(5, 4)).equal(false);
+				expect(Stream.range(3).hasAll(1, 2)).equal(true);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().hasAll()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of<number[]>().hasAll(1)).equal(false);
+			});
+		});
+
+		describe("'intersects'", () => {
+			it("should return whether any of the given iterables contain values in this stream", () => {
+				expect(Stream.range(3).intersects(Stream.range(3))).equal(true);
+				expect(Stream.range(3).intersects(Stream.range(3, 6))).equal(false);
+				expect(Stream.range(3).intersects(Stream.range(3, 6), [0])).equal(true);
+				expect(Stream.range(3).intersects(Stream.range(3, 6), new Set([2]))).equal(true);
+			});
+
+			it("should return true with an empty stream if no values are given", () => {
+				expect(Stream.of().intersects()).equal(true);
+			});
+
+			it("should return false with an empty stream if values are given", () => {
+				expect(Stream.of().intersects(Stream.of(1))).equal(false);
+				expect(Stream.of().intersects([1])).equal(false);
+				expect(Stream.of().intersects(new Set([1]))).equal(false);
+				expect(Stream.of().intersects([1][Symbol.iterator]())).equal(false);
+			});
+
+			it("should return false with an empty stream if the iterables being compared against are also empty", () => {
+				expect(Stream.of().intersects(Stream.of())).equal(false);
+				expect(Stream.of().intersects([])).equal(false);
+				expect(Stream.of().intersects(new Set())).equal(false);
+				expect(Stream.of().intersects([][Symbol.iterator]())).equal(false);
+				expect(Stream.of().intersects(Stream.of(), [], [][Symbol.iterator](), new Set())).equal(false);
+			});
+		});
+
+		describe("'count'", () => {
+			it("should return the number of items in the stream", () => {
+				expect(Stream.range(3).count()).equal(3);
+				expect(Stream.range(5).count()).equal(5);
+				expect(Stream.of().count()).equal(0);
+			});
+
+			it("should accept a predicate and only count the items that match the predicate", () => {
+				expect(Stream.range(5).count(val => val % 2)).equal(2);
+			});
+		});
+
+		describe("'length'", () => {
+			it("should return the number of items in the stream", () => {
+				expect(Stream.range(3).length()).equal(3);
+				expect(Stream.range(5).length()).equal(5);
+				expect(Stream.of().length()).equal(0);
+			});
+		});
+
+		describe("'size'", () => {
+			it("should return the number of items in the stream", () => {
+				expect(Stream.range(3).size()).equal(3);
+				expect(Stream.range(5).size()).equal(5);
+				expect(Stream.of().size()).equal(0);
+			});
+		});
+
+		describe("'at'", () => {
+			it("should return the value at the given index", () => {
+				expect(Stream.range(3).at(2)).equal(2);
+				expect(Stream.range(3).at(1)).equal(1);
+				expect(Stream.range(3).at(0)).equal(0);
+			});
+
+			it("should accept negative indices", () => {
+				expect(Stream.range(3).at(-1)).equal(2);
+				expect(Stream.range(3).at(-2)).equal(1);
+				expect(Stream.range(3).at(-3)).equal(0);
+			});
+
+			it("should return undefined if the index doesn't exist", () => {
+				expect(Stream.range(3).at(3)).equal(undefined);
+				expect(Stream.range(3).at(-4)).equal(undefined);
+			});
+
+			it("should error if given a non-integer", () => {
+				expect(() => Stream.range(3).at(0.1)).throw();
+			});
+
+			it("should allow providing an 'orElse' method for generating replacement values", () => {
+				expect(Stream.range(3).at(0, () => 10)).equal(0);
+				expect(Stream.range(3).at(2, () => 11)).equal(2);
+				expect(Stream.range(3).at(5, () => 12)).equal(12);
+				expect(Stream.range(3).at(-1, () => 13)).equal(2);
+				expect(Stream.range(3).at(-3, () => 14)).equal(0);
+				expect(Stream.range(3).at(-5, () => 15)).equal(15);
+			});
+
+			it("should not use the 'orElse' method when the value in the stream is 'undefined'", () => {
+				expect(Stream.of(undefined, undefined, undefined).at(0, () => 10)).equal(undefined);
+				expect(Stream.of(undefined, undefined, undefined).at(1, () => 10)).equal(undefined);
+				expect(Stream.of(undefined, undefined, undefined).at(-2, () => 10)).equal(undefined);
+			});
+		});
+	});
 });

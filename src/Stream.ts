@@ -6,18 +6,6 @@ import { choice, shuffle, tuple } from "./util/Arrays";
 import { Override } from "./util/decorator/Override";
 import { isIterable } from "./util/Iterables";
 
-type Action<T> =
-	["filter", (val: T) => boolean] |
-	["map", (val: T) => any] |
-	["take", number] |
-	["takeWhile", (val: T) => boolean] |
-	["takeUntil", (val: T) => boolean] |
-	["drop", number] |
-	["dropWhile", (val: T) => boolean] |
-	["dropUntil", (val: T) => boolean] |
-	["step", number, number] |
-	[undefined, any?, any?];
-
 type Flat1<T> = T extends Iterable<infer X> ? X | Extract<T, string> | Exclude<T, Iterable<any>> : never;
 
 export interface UnzippedPartitions<K, V> extends Streamable<["key", Stream<K>] | ["value", Stream<V>]> {
@@ -27,6 +15,8 @@ export interface UnzippedPartitions<K, V> extends Streamable<["key", Stream<K>] 
 	values (): Stream<V>;
 	partitions (): Stream<["key", Stream<K>] | ["value", Stream<V>]>;
 }
+
+const LAST = Symbol();
 
 /**
  * Note: When "splatting" a stream, it's actually faster (but not by much) to first collect it into an array:
@@ -236,13 +226,13 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Returns a Stream which will only iterate through the items in this Stream until the predicate doesn't match.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract takeWhile (predicate: (val: T) => boolean): Stream<T>;
+	public abstract takeWhile (predicate: (val: T) => unknown): Stream<T>;
 
 	/**
 	 * Returns a Stream which will only iterate through the items in this Stream until the predicate matches.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract takeUntil (predicate: (val: T) => boolean): Stream<T>;
+	public abstract takeUntil (predicate: (val: T) => unknown): Stream<T>;
 
 	/**
 	 * Returns a Stream which will skip the first X items, where X is the given argument.
@@ -253,13 +243,13 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Returns a Stream which will skip the items in this Stream until the predicate doesn't match.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract dropWhile (predicate: (val: T) => boolean): Stream<T>;
+	public abstract dropWhile (predicate: (val: T) => unknown): Stream<T>;
 
 	/**
 	 * Returns a Stream which will skip the items in this Stream until the predicate matches.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract dropUntil (predicate: (val: T) => boolean): Stream<T>;
+	public abstract dropUntil (predicate: (val: T) => unknown): Stream<T>;
 
 	/**
 	 * Returns a Stream which steps through the items in the current Stream using the provided step amount.
@@ -352,37 +342,10 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	//
 
 	/**
-	 * Returns the item at the given index, or `undefined` if it does not exist.
-	 *
-	 * Note: An alias for `drop(index - 1).first()`.
-	 */
-	public abstract at (index: number): T | undefined;
-	/**
-	 * Returns the item at the given index, or `orElse` if it does not exist.
-	 *
-	 * Note: An alias for `drop(index - 1).first(orElse)`.
-	 */
-	public abstract at<A> (index: number, orElse: () => A):
-		A extends never ? T :
-		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
-		({}) extends A ? T | Partial<T> :
-		T | A;
-	/**
-	 * Returns the item at the given index, or, if it does not exist, `orElse`, or `undefined` if `orElse` is not provided.
-	 *
-	 * Note: An alias for `drop(index - 1).first(orElse)`.
-	 */
-	public abstract at<A = never> (index: number, orElse?: () => A): undefined | (
-		never extends A ? T :
-		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
-		({}) extends A ? T | Partial<T> :
-		T | A);
-
-	/**
 	 * Returns true if the predicate returns true for any of the items in this Stream
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract any (predicate: (val: T, index: number) => boolean): boolean;
+	public abstract any (predicate: (val: T, index: number) => unknown): boolean;
 
 	/**
 	 * Returns true if the predicate returns true for any of the items in this Stream
@@ -390,13 +353,13 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 *
 	 * Note: Alias of `any()`
 	 */
-	public abstract some (predicate: (val: T, index: number) => boolean): boolean;
+	public abstract some (predicate: (val: T, index: number) => unknown): boolean;
 
 	/**
 	 * Returns true if the predicate returns true for every item in the Stream
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract every (predicate: (val: T, index: number) => boolean): boolean;
+	public abstract every (predicate: (val: T, index: number) => unknown): boolean;
 
 	/**
 	 * Returns true if the predicate returns true for every item in the Stream
@@ -404,13 +367,13 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 *
 	 * Note: Alias of `every()`
 	 */
-	public abstract all (predicate: (val: T, index: number) => boolean): boolean;
+	public abstract all (predicate: (val: T, index: number) => unknown): boolean;
 
 	/**
 	 * Returns true if the predicate returns false for every item in the Stream
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract none (predicate: (val: T, index: number) => boolean): boolean;
+	public abstract none (predicate: (val: T, index: number) => unknown): boolean;
 
 	/**
 	 * Returns whether the Stream includes any of the the given values. Uses strict equality comparison. `===`
@@ -453,12 +416,18 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	/**
 	 * Returns whether this Stream has any items in common with items in the given iterables.
 	 */
-	public abstract intersects (...iterables: Iterable<T>[]): boolean;
+	public abstract intersects<X> (...iterables: Iterable<X>[]): T extends X ? boolean : never;
+
 
 	/**
 	 * Returns the number of items in this Stream.
 	 */
 	public abstract count (): number;
+	/**
+	 * Returns the number of items in this Stream.
+	 * @param predicate Only counts the items that match this predicate
+	 */
+	public abstract count (predicate?: (value: T, index: number) => unknown): number;
 
 	/**
 	 * Returns the number of items in this Stream.
@@ -497,7 +466,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Returns the first item in this Stream that matches a predicate, or `orElse` if there are none.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract first<A> (predicate: undefined | ((val: T, index: number) => boolean), orElse: () => A):
+	public abstract first<A> (predicate: undefined | ((val: T, index: number) => unknown), orElse: () => A):
 		A extends never ? T :
 		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
 		({}) extends A ? T | Partial<T> :
@@ -506,7 +475,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Returns the first item in this Stream that matches a predicate, or `orElse` if there are none.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract first<A = never> (predicate?: (val: T, index: number) => boolean, orElse?: () => A): undefined | (
+	public abstract first<A = never> (predicate?: (val: T, index: number) => unknown, orElse?: () => A): undefined | (
 		never extends A ? T :
 		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
 		({}) extends A ? T | Partial<T> :
@@ -524,7 +493,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 *
 	 * Note: Alias of `first()`
 	 */
-	public abstract find<A> (predicate: undefined | ((val: T, index: number) => boolean), orElse: () => A):
+	public abstract find<A> (predicate: undefined | ((val: T, index: number) => unknown), orElse: () => A):
 		A extends never ? T :
 		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
 		({}) extends A ? T | Partial<T> :
@@ -535,7 +504,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 *
 	 * Note: Alias of `first()`
 	 */
-	public abstract find<A = never> (predicate?: (val: T, index: number) => boolean, orElse?: () => A): undefined | (
+	public abstract find<A = never> (predicate?: (val: T, index: number) => unknown, orElse?: () => A): undefined | (
 		never extends A ? T :
 		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
 		({}) extends A ? T | Partial<T> :
@@ -549,12 +518,47 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Returns the last item in this Stream that matches a predicate, or `orElse` if there are none.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract last (predicate: undefined | ((val: T, index: number) => boolean), orElse: T): T;
+	public abstract last<A> (predicate: undefined | ((val: T, index: number) => unknown), orElse: () => A):
+		A extends never ? T :
+		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
+		({}) extends A ? T | Partial<T> :
+		T | A;
 	/**
 	 * Returns the last item in this Stream that matches a predicate, or `orElse` if there are none.
 	 * @param predicate A predicate function that takes a Stream value and its index.
 	 */
-	public abstract last (predicate?: (val: T, index: number) => boolean, orElse?: T): T | undefined;
+	public abstract last<A = never> (predicate?: (val: T, index: number) => unknown, orElse?: () => A): undefined | (
+		never extends A ? T :
+		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
+		({}) extends A ? T | Partial<T> :
+		T | A);
+
+	/**
+	 * Returns the item at the given index, or `undefined` if it does not exist.
+	 *
+	 * Note: An alias for `drop(index - 1).first()`.
+	 */
+	public abstract at (index: number): T | undefined;
+	/**
+	 * Returns the item at the given index, or `orElse` if it does not exist.
+	 *
+	 * Note: An alias for `drop(index - 1).first(orElse)`.
+	 */
+	public abstract at<A> (index: number, orElse: () => A):
+		A extends never ? T :
+		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
+		({}) extends A ? T | Partial<T> :
+		T | A;
+	/**
+	 * Returns the item at the given index, or, if it does not exist, `orElse`, or `undefined` if `orElse` is not provided.
+	 *
+	 * Note: An alias for `drop(index - 1).first(orElse)`.
+	 */
+	public abstract at<A = never> (index: number, orElse?: () => A): undefined | (
+		never extends A ? T :
+		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
+		({}) extends A ? T | Partial<T> :
+		T | A);
 
 	/**
 	 * Returns a random item in this Stream, or `undefined` if there are none.
@@ -720,6 +724,18 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	public abstract hasNext (): boolean;
 }
 
+type Action<T> =
+	["filter", (val: T) => unknown] |
+	["map", (val: T) => any] |
+	["take", number] |
+	["takeWhile", (val: T) => unknown] |
+	["takeUntil", (val: T) => unknown] |
+	["drop", number] |
+	["dropWhile", (val: T) => unknown] |
+	["dropUntil", (val: T) => unknown] |
+	["step", number, number] |
+	[undefined, any?, any?];
+
 class StreamImplementation<T> extends Stream<T> {
 
 	private readonly iterators: (Iterator<T> | Streamable<T>)[];
@@ -810,7 +826,7 @@ class StreamImplementation<T> extends Stream<T> {
 		return this.getWithAction(["take", amount]);
 	}
 
-	@Override public takeWhile (predicate: (val: T) => boolean) {
+	@Override public takeWhile (predicate: (val: T) => unknown) {
 		if (this.savedNext.length) {
 			if (!predicate(this.savedNext[0])) {
 				this._done = true;
@@ -820,7 +836,7 @@ class StreamImplementation<T> extends Stream<T> {
 		return this.getWithAction(["takeWhile", predicate]);
 	}
 
-	@Override public takeUntil (predicate: (val: T) => boolean) {
+	@Override public takeUntil (predicate: (val: T) => unknown) {
 		if (this.savedNext.length) {
 			if (predicate(this.savedNext[0])) {
 				this._done = true;
@@ -844,7 +860,7 @@ class StreamImplementation<T> extends Stream<T> {
 		return this.getWithAction(["drop", amount]);
 	}
 
-	@Override public dropWhile (predicate: (val: T) => boolean) {
+	@Override public dropWhile (predicate: (val: T) => unknown) {
 		if (this.savedNext.length) {
 			if (predicate(this.savedNext[0])) {
 				this.savedNext.pop();
@@ -857,7 +873,7 @@ class StreamImplementation<T> extends Stream<T> {
 		return this.getWithAction(["dropWhile", predicate]);
 	}
 
-	@Override public dropUntil (predicate: (val: T) => boolean) {
+	@Override public dropUntil (predicate: (val: T) => unknown) {
 		if (this.savedNext.length) {
 			if (!predicate(this.savedNext[0])) {
 				this.savedNext.pop();
@@ -937,15 +953,7 @@ class StreamImplementation<T> extends Stream<T> {
 	// Collection
 	//
 
-	public at (index: number): T | undefined;
-	public at (index: number, orElse: () => T): T;
-	public at (index: number, orElse?: () => T): T | undefined;
-	@Override public at (index: number, orElse?: () => T) {
-		this.drop(index);
-		return this.first(undefined, orElse);
-	}
-
-	@Override public any (predicate: (val: T, index: number) => boolean) {
+	@Override public any (predicate: (val: T, index: number) => unknown) {
 		let index = 0;
 		while (true) {
 			this.next();
@@ -959,11 +967,11 @@ class StreamImplementation<T> extends Stream<T> {
 		}
 	}
 
-	@Override public some (predicate: (val: T, index: number) => boolean) {
+	@Override public some (predicate: (val: T, index: number) => unknown) {
 		return this.any(predicate);
 	}
 
-	@Override public every (predicate: (val: T, index: number) => boolean) {
+	@Override public every (predicate: (val: T, index: number) => unknown) {
 		let index = 0;
 		while (true) {
 			this.next();
@@ -977,11 +985,11 @@ class StreamImplementation<T> extends Stream<T> {
 		}
 	}
 
-	@Override public all (predicate: (val: T, index: number) => boolean) {
+	@Override public all (predicate: (val: T, index: number) => unknown) {
 		return this.every(predicate);
 	}
 
-	@Override public none (predicate: (val: T, index: number) => boolean) {
+	@Override public none (predicate: (val: T, index: number) => unknown) {
 		let index = 0;
 		while (true) {
 			this.next();
@@ -999,7 +1007,7 @@ class StreamImplementation<T> extends Stream<T> {
 		while (true) {
 			this.next();
 			if (this._done) {
-				return false;
+				return values.length === 0;
 			}
 
 			if (values.includes(this._value)) {
@@ -1020,7 +1028,7 @@ class StreamImplementation<T> extends Stream<T> {
 		while (true) {
 			this.next();
 			if (this._done) {
-				return false;
+				return values.length === 0;
 			}
 
 			const i = values.indexOf(this._value);
@@ -1042,11 +1050,11 @@ class StreamImplementation<T> extends Stream<T> {
 	}
 
 	// tslint:disable-next-line cyclomatic-complexity
-	@Override public intersects (...iterables: Iterable<T>[]) {
+	@Override public intersects<X> (...iterables: Iterable<X>[]): T extends X ? boolean : never {
 		while (true) {
 			this.next();
 			if (this._done) {
-				return false;
+				return (iterables.length === 0) as any;
 			}
 
 			for (let i = 0; i < iterables.length; i++) {
@@ -1059,8 +1067,8 @@ class StreamImplementation<T> extends Stream<T> {
 				if (!Array.isArray(iterable) && !(iterable instanceof Set)) {
 					const replacementArray = [];
 					for (const item of iterable) {
-						if (item === this._value) {
-							return true;
+						if ((item as any) === this._value) {
+							return true as any;
 						}
 
 						replacementArray.push(item);
@@ -1071,24 +1079,29 @@ class StreamImplementation<T> extends Stream<T> {
 
 				if (Array.isArray(iterable)) {
 					if (iterable.includes(this._value)) {
-						return true;
+						return true as any;
 					}
 
 				} else if (iterable instanceof Set) {
 					if (iterable.has(this._value)) {
-						return true;
+						return true as any;
 					}
 				}
 			}
 		}
 	}
 
-	@Override public count () {
+	@Override public count (predicate?: (value: T, index: number) => any) {
 		let i = 0;
+		let count = 0;
 		while (true) {
 			this.next();
 			if (this._done) {
-				return i;
+				return count;
+			}
+
+			if (!predicate || predicate(this._value, i)) {
+				count++;
 			}
 
 			i++;
@@ -1131,9 +1144,9 @@ class StreamImplementation<T> extends Stream<T> {
 	}
 
 	public first (): T | undefined;
-	public first (predicate?: (val: T, index: number) => boolean, orElse?: () => T): T | undefined;
-	public first (predicate: undefined | ((val: T, index: number) => boolean), orElse: () => T): T;
-	@Override public first (predicate?: (val: T, index: number) => boolean, orElse?: () => T) {
+	public first (predicate?: (val: T, index: number) => unknown, orElse?: () => T): T | undefined;
+	public first (predicate: undefined | ((val: T, index: number) => unknown), orElse: () => T): T;
+	@Override public first (predicate?: (val: T, index: number) => unknown, orElse?: () => T) {
 		let index = 0;
 		while (true) {
 			this.next();
@@ -1148,18 +1161,18 @@ class StreamImplementation<T> extends Stream<T> {
 	}
 
 	public find (): T | undefined;
-	public find (predicate?: (val: T, index: number) => boolean, orElse?: () => T): T | undefined;
-	public find (predicate: undefined | ((val: T, index: number) => boolean), orElse: () => T): T;
-	@Override public find (predicate?: (val: T, index: number) => boolean, orElse?: () => T) {
+	public find (predicate?: (val: T, index: number) => unknown, orElse?: () => T): T | undefined;
+	public find (predicate: undefined | ((val: T, index: number) => unknown), orElse: () => T): T;
+	@Override public find (predicate?: (val: T, index: number) => unknown, orElse?: () => T) {
 		return this.first(predicate, orElse);
 	}
 
 	public last (): T | undefined;
-	public last (predicate?: (val: T, index: number) => boolean, orElse?: T): T | undefined;
-	public last (predicate: undefined | ((val: T, index: number) => boolean), orElse: T): T;
-	@Override public last (predicate?: (val: T, index: number) => boolean, orElse?: T) {
+	public last (predicate?: (val: T, index: number) => unknown, orElse?: () => T): T | undefined;
+	public last (predicate: undefined | ((val: T, index: number) => unknown), orElse: () => T): T;
+	@Override public last (predicate?: (val: T, index: number) => unknown, orElse?: () => T) {
 		let index = 0;
-		let last = orElse;
+		let last: any = LAST;
 		while (true) {
 			this.next();
 			if (this._done) {
@@ -1171,7 +1184,26 @@ class StreamImplementation<T> extends Stream<T> {
 			}
 		}
 
-		return last;
+		return last !== LAST ? last : orElse ? orElse() : undefined;
+	}
+
+	public at (index: number): T | undefined;
+	public at (index: number, orElse: () => T): T;
+	public at (index: number, orElse?: () => T): T | undefined;
+	@Override public at (index: number, orElse?: () => T) {
+		if (!Number.isInteger(index)) {
+			throw new Error("Can only retrieve values at integer indices.");
+		}
+
+		if (index >= 0)
+			return this.drop(index).first(undefined, orElse);
+
+		const array = this.toArray();
+		index += array.length;
+		if (index < 0)
+			return orElse ? orElse() : undefined;
+
+		return array[index];
 	}
 
 	@Override public random (orElse?: T, random = Math.random) {
