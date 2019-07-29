@@ -571,15 +571,19 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	/**
 	 * Returns a random item in this Stream, or `orElse` if there are none.
 	 */
-	public abstract random (orElse: T, random?: () => number): T;
+	public abstract random<A> (random: (() => number) | undefined, orElse: () => A):
+		A extends never ? T :
+		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
+		({}) extends A ? T | Partial<T> :
+		T | A;
 	/**
 	 * Returns a random item in this Stream, or `orElse` if there are none.
 	 */
-	public abstract random (orElse?: T): T | undefined;
-	/**
-	 * Returns a random item in this Stream, or `orElse` if there are none.
-	 */
-	public abstract random (orElse?: T, random?: () => number): T | undefined;
+	public abstract random<A = never> (random?: () => number, orElse?: () => A): undefined | (
+		never extends A ? T :
+		A extends never[] ? T extends any[] ? T | undefined[] : T | A :
+		({}) extends A ? T | Partial<T> :
+		T | A);
 
 	/**
 	 * Returns a value of type R, generated with the given collector function.
@@ -1246,9 +1250,9 @@ class StreamImplementation<T> extends Stream<T> {
 		return array[index];
 	}
 
-	@Override public random (orElse?: T, random = Math.random) {
+	@Override public random (random = Math.random, orElse?: () => any): any {
 		if (!this.hasNext()) {
-			return orElse!;
+			return orElse ? orElse() : undefined;
 		}
 
 		return choice([...this], random)!;

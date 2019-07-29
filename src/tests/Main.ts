@@ -763,5 +763,30 @@ describe("Stream", () => {
 				expect(Stream.of(undefined, undefined, undefined).at(-2, () => 10)).equal(undefined);
 			});
 		});
+
+		describe("'random'", () => {
+			it("should return a random item in the stream", () => {
+				const originalMathRandom = Math.random;
+				let i = 0;
+				Math.random = () => i += 3 / 15;
+				expect(Stream.range(15).random()).equal(3);
+				expect(Stream.range(15).random()).equal(6);
+				expect(Stream.range(15).random()).equal(9);
+				Math.random = originalMathRandom;
+			});
+
+			it("should return the given value or undefined if the stream is empty", () => {
+				expect(Stream.of().random()).undefined;
+				expect(Stream.of().random(undefined, () => 1)).equal(1);
+			});
+
+			it("should use the given random number generator", () => {
+				let i = 0;
+				const random = () => i += 2 / 10;
+				expect(Stream.range(10).random(random)).equal(2);
+				expect(Stream.range(10).random(random)).equal(4);
+				expect(Stream.range(10).random(random)).equal(6);
+			});
+		});
 	});
 });
