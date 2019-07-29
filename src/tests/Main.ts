@@ -788,5 +788,27 @@ describe("Stream", () => {
 				expect(Stream.range(10).random(random)).equal(6);
 			});
 		});
+
+		describe("'collect'", () => {
+			it("should return the result of the given function, passing the stream as an argument", () => {
+				expect(Stream.range(3).collect(() => "foo")).equal("foo");
+				expect(Stream.range(3).collect(nums => [...nums])).ordered.members([0, 1, 2]);
+			});
+
+			it("should also pass any additional arguments", () => {
+				expect(Stream.range(3).collect((nums, multiplier) => [...nums].map(n => n * multiplier), 3)).ordered.members([0, 3, 6]);
+			});
+		});
+
+		describe("'splat'", () => {
+			it("should return the result of the given function, passing the contents of the stream as arguments", () => {
+				expect(Stream.range(3).splat(() => "foo")).equal("foo");
+				expect(Stream.range(3).splat((...nums) => nums)).ordered.members([0, 1, 2]);
+			});
+
+			it("should also pass any additional arguments", () => {
+				expect(Stream.range(3).splat((...nums) => nums, 3, 4, 5)).ordered.members([0, 1, 2, 3, 4, 5]);
+			});
+		});
 	});
 });
