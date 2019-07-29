@@ -663,7 +663,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	/**
 	 * Puts the key-value pairs in this Stream into the given Map.
 	 */
-	public abstract toMap<KN, VN> (map: Map<KN, VN>): T extends [infer K, infer V] ? Map<K | KN, V | VN> : never;
+	public abstract toMap<KE, VE> (map: Map<KE, VE>): T extends [infer K, infer V] ? Map<K | KE, V | VE> : never;
 	/**
 	 * Constructs a Map instance from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
@@ -674,7 +674,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	public abstract toMap<K, V, KN, VN> (map: Map<KN, VN>, mapper: (value: T, index: number) => [K, V]): Map<K, V>;
+	public abstract toMap<K, V, KE, VE> (map: Map<KE, VE>, mapper: (value: T, index: number) => [K, V]): Map<K | KE, V | VE>;
 
 	/**
 	 * Constructs an object from the key-value pairs in this Stream.
