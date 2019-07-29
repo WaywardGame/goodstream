@@ -270,9 +270,6 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 */
 	public abstract sorted (comparator: (a: T, b: T) => number): Stream<T>;
 
-	// todo: in the future, consider implementing a sorting method that can do stuff like this:
-	// https://github.com/winterbe/sequency/blob/master/src/createComparatorFactory.ts
-
 	/**
 	 * Returns a new Stream which contains the contents of this Stream, in reverse order.
 	 */
@@ -281,14 +278,12 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	/**
 	 * Returns a new Stream which contains only unique items in this Stream.
 	 *
-	 * Note: Alias of `stream.toSet().stream()`
+	 * Note: Alias of `Stream.from(stream.toSet())`
 	 */
 	public abstract distinct (): Stream<T>;
 
 	/**
 	 * Returns a new Stream of the shuffled items in this Stream.
-	 *
-	 * Note: This method is an alias of `stream.toArray().shuffle(random).stream()`
 	 */
 	public abstract shuffle (random?: () => number): Stream<T>;
 
@@ -337,7 +332,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	 * Why is this useful? It can be used, for example, to prevent concurrent modification errors. Since it collects
 	 * everything into an array before streaming the values, it allows doing things such as deletion from the source object.
 	 *
-	 * Note: This method is an alias of `stream.toArray().stream()`.
+	 * Note: This method is an alias of `Stream.from(stream.toArray())`.
 	 */
 	public abstract collectStream (): Stream<T>;
 
@@ -613,7 +608,7 @@ export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 	/**
 	 * Returns a promise of a stream with all items await-ed.
 	 *
-	 * Note: Alias of `Promise.all(stream.toArray()).stream()`
+	 * Note: Alias of `Stream.from(Promise.all(stream.toArray()))`
 	 */
 	public abstract rest (): Promise<T extends Promise<infer R> ? Stream<R> : never>;
 
