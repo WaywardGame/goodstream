@@ -1341,8 +1341,7 @@ class StreamImplementation<T> extends Stream<T> {
 
 			} else {
 				if (!Array.isArray(this._value)) {
-					console.warn("[Stream]", "Can't convert the stream value", this._value, "into a key-value pair.");
-					continue;
+					throw new Error(`Can't convert the stream value "${this._value}" into a key-value pair.`);
 				}
 
 				result.set(...this._value as any as [any, any]);
@@ -1372,8 +1371,7 @@ class StreamImplementation<T> extends Stream<T> {
 
 			} else {
 				if (!Array.isArray(this._value)) {
-					console.warn("[Stream]", "Can't convert the stream value", this._value, "into a key-value pair.");
-					continue;
+					throw new Error(`Can't convert the stream value "${this._value}" into a key-value pair.`);
 				}
 
 				const [key, value] = this._value as any as [any, any];
