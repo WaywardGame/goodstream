@@ -395,9 +395,9 @@ describe("Stream", () => {
 
 		describe("'partition'", () => {
 			it("should produce a 'partitions' object containing streams of items, each stream having its own 'key' which was decided by a sorting function", () => {
-				const partitions = Stream.range(10).partition(n => n % 2);
+				const partitions = Stream.range(10).partition(n => `k${n % 2}`);
 				expect([...partitions.partitions().map(([partitionKey, values]) => [partitionKey, [...values]])])
-					.deep.ordered.members([[0, [0, 2, 4, 6, 8]], [1, [1, 3, 5, 7, 9]]]);
+					.deep.ordered.members([["k0", [0, 2, 4, 6, 8]], ["k1", [1, 3, 5, 7, 9]]]);
 			});
 
 			it("should allow retrieving one of the partitions before streaming the rest", () => {
@@ -425,6 +425,43 @@ describe("Stream", () => {
 				const partitions = Stream.range(10).partition(n => n % 3);
 				[...partitions.partitions()];
 				expect([...partitions.get(0)]).ordered.members([0, 3, 6, 9]);
+			});
+
+			it("should allow converting to a map", () => {
+				expect(Stream.range(10).partition(n => n % 3).toMap()).instanceOf(Map);
+				const partitionedMap = [...Stream.range(10).partition(n => n % 3).toMap().entries()];
+				expect(partitionedMap.length).equals(3);
+				expect(partitionedMap.map(([k]) => k)).ordered.members([0, 1, 2]);
+				for (const [, v] of partitionedMap) expect(v).instanceOf(Stream);
+				expect(partitionedMap.map(([, v]) => [...v])).deep.ordered.members([[0, 3, 6, 9], [1, 4, 7], [2, 5, 8]]);
+			});
+
+			it("should allow converting to a map with a mapper", () => {
+				expect([...Stream.range(10).partition(n => n % 3).toMap(partitionValueStream => [...partitionValueStream]).entries()])
+					.deep.ordered.members([[0, [0, 3, 6, 9]], [1, [1, 4, 7]], [2, [2, 5, 8]]]);
+			});
+
+			it("should allow inserting into an existing map", () => {
+				const partitionedMap = [...Stream.range(10).partition(n => n % 3).toMap(new Map([["foo", "bar"]])).entries()];
+				expect(partitionedMap.length).equals(4);
+				expect(partitionedMap.map(([k]) => k)).ordered.members(["foo", 0, 1, 2]);
+				for (const [, v] of partitionedMap) expect(typeof v === "string" || v instanceof Stream).true;
+				expect(partitionedMap.map(([, v]) => [...v])).deep.ordered.members([["b", "a", "r"], [0, 3, 6, 9], [1, 4, 7], [2, 5, 8]]);
+			});
+
+			it("should allow inserting into an existing map, with a mapper", () => {
+				expect([...Stream.range(10).partition(n => n % 3).toMap(new Map([["foo", "bar"]]), partitionValueStream => [...partitionValueStream]).entries()])
+					.deep.ordered.members([["foo", "bar"], [0, [0, 3, 6, 9]], [1, [1, 4, 7]], [2, [2, 5, 8]]]);
+			});
+
+			it("should allow converting to a map of arrays", () => {
+				expect([...Stream.range(10).partition(n => n % 3).toArrayMap().entries()])
+					.deep.ordered.members([[0, [0, 3, 6, 9]], [1, [1, 4, 7]], [2, [2, 5, 8]]]);
+			});
+
+			it("should allow inserting into an existing map as arrays", () => {
+				expect([...Stream.range(10).partition(n => n % 3).toArrayMap(new Map([["foo", "bar"]])).entries()])
+					.deep.ordered.members([["foo", "bar"], [0, [0, 3, 6, 9]], [1, [1, 4, 7]], [2, [2, 5, 8]]]);
 			});
 		});
 

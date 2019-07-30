@@ -1,13 +1,13 @@
 import { Streamable } from "./IStream";
 import Stream from "./Stream";
 
-export default class Partitions<T, K> implements Streamable<[K, Stream<T>]> {
+export default class Partitions<K, V> implements Streamable<[K, Stream<V>]> {
 
-	private readonly _partitions: Map<K, [Partition<T>, Stream<T>]> = new Map();
+	private readonly _partitions: Map<K, [Partition<V>, Stream<V>]> = new Map();
 	private readonly partitionKeys: K[] = [];
 	private partitionKeyIndex = 0;
 
-	private _value: [K, Stream<T>];
+	private _value: [K, Stream<V>];
 	private _done = false;
 	private index = 0;
 
@@ -15,9 +15,9 @@ export default class Partitions<T, K> implements Streamable<[K, Stream<T>]> {
 	public get done () { return this._done; }
 
 	public constructor (
-		private readonly stream: Streamable<T>,
-		private readonly sorter: (val: T, index: number) => K,
-		private readonly streamMapper: <V>(val: Streamable<V>) => Stream<V>,
+		private readonly stream: Streamable<V>,
+		private readonly sorter: (val: V, index: number) => K,
+		private readonly streamMapper: <V2>(val: Streamable<V2>) => Stream<V2>,
 	) { }
 
 	/**
@@ -41,9 +41,59 @@ export default class Partitions<T, K> implements Streamable<[K, Stream<T>]> {
 		return this.streamMapper(this);
 	}
 
+	/**
+	 * Constructs a Map instance from the partitions.
+	 */
+	public toMap (): Map<K, Stream<V>>;
+	/**
+	 * Puts the partitions into the given Map.
+	 */
+	public toMap<KE, VE> (map: Map<KE, VE>): Map<K | KE, Stream<V> | VE>;
+	/**
+	 * Constructs a Map instance from the partitions using a mapping function.
+	 * @param mapper A mapping function which takes a Stream of partitioned values and returns a replacement value.
+	 */
+	public toMap<VN> (mapper: (value: Stream<V>, key: K) => VN): Map<K, VN>;
+	/**
+	 * Puts the partitions into the given Map using a mapping function.
+	 * @param map The map to put key-partition pairs into.
+	 * @param mapper A mapping function which takes a Stream of partitioned values and returns a replacement value.
+	 */
+	public toMap<VN, KE, VE> (map: Map<KE, VE>, mapper: (value: Stream<V>, key: K) => VN): Map<K | KE, VN | VE>;
+	public toMap (result?: Map<any, any> | ((value: Stream<V>, key: K) => any), mapper?: (value: Stream<V>, key: K) => any): any {
+		if (typeof result === "function") {
+			mapper = result;
+			result = new Map();
+		} else if (result === undefined) {
+			result = new Map();
+		}
+
+		while (true) {
+			this.next();
+			if (this._done) {
+				return result;
+			}
+
+			const [key, value] = this._value;
+			result.set(key, mapper ? mapper(value, key) : value);
+		}
+	}
+
+	/**
+	 * Constructs a Map instance from the partitions, each stream of values first being converted to an array.
+	 */
+	public toArrayMap (): Map<K, V[]>;
+	/**
+	 * Inserts the partitions into the given Map, each stream of values first being converted to an array.
+	 */
+	public toArrayMap<KE, VE> (map: Map<KE, VE>): Map<K | KE, V[] | VE>;
+	public toArrayMap<KE, VE> (map?: Map<KE, VE>): Map<K | KE, V[] | VE> {
+		return this.toMap(map!, partitionValueStream => partitionValueStream.toArray());
+	}
+
 	public next () {
 		let key: K;
-		let partitionStream: Stream<T>;
+		let partitionStream: Stream<V>;
 		if (this.partitionKeyIndex < this.partitionKeys.length) {
 			key = this.partitionKeys[this.partitionKeyIndex++];
 			[, partitionStream] = this.getPartition(key);
@@ -64,7 +114,7 @@ export default class Partitions<T, K> implements Streamable<[K, Stream<T>]> {
 				willContinue = true;
 			}
 
-			let partition: Partition<T>;
+			let partition: Partition<V>;
 			[partition, partitionStream] = this.getPartition(sortedKey);
 			partition.add(this.stream.value);
 
@@ -78,11 +128,11 @@ export default class Partitions<T, K> implements Streamable<[K, Stream<T>]> {
 		}
 	}
 
-	private getPartition (key: K): [Partition<T>, Stream<T>] {
+	private getPartition (key: K): [Partition<V>, Stream<V>] {
 		let partition = this._partitions.get(key);
 		if (partition === undefined) {
 			this.partitionKeys.push(key);
-			const partitionStream = new Partition<T>(this.getFunctionForRetrievingNextInPartition(key));
+			const partitionStream = new Partition<V>(this.getFunctionForRetrievingNextInPartition(key));
 			this._partitions.set(key, partition = [partitionStream, this.streamMapper(partitionStream)]);
 		}
 
