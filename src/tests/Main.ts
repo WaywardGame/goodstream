@@ -9,6 +9,21 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe("Stream", () => {
+
+	describe("misc helper", () => {
+		describe("'is'", () => {
+			it("should return whether a value is a stream instance", () => {
+				expect(Stream.is(Stream.of())).true;
+				expect(Stream.is(true)).false;
+				expect(Stream.is(0)).false;
+				expect(Stream.is(1)).false;
+				expect(Stream.is("test")).false;
+				expect(Stream.is([])).false;
+				expect(Stream.is([][Symbol.iterator]())).false;
+			});
+		});
+	});
+
 	describe("creation helper", () => {
 		describe("'empty'", () => {
 			it("should produce an empty stream", () => {

@@ -30,6 +30,10 @@ const LAST = Symbol();
  */
 export default abstract class Stream<T> implements Streamable<T>, Iterable<T> {
 
+	public static is<T = any> (value: unknown): value is Stream<T> {
+		return value instanceof StreamImplementation;
+	}
+
 	public static empty<T = any> () {
 		return Stream.of<T[]>();
 	}
