@@ -1,28 +1,23 @@
-import { Streamable } from "./IStream";
+export default class FlatMapStream<T, R> implements Iterator<R>, IteratorResult<R> {
+	public value: R;
+	public done = false;
 
-export default class FlatMapStream<T, R> implements Streamable<R> {
 	private subIterable: Iterator<any> | undefined;
 
-	private _value: R;
-	private _done = false;
-
-	public get value () { return this._value; }
-	public get done () { return this._done; }
-
-	public constructor (private readonly stream: Streamable<T>, private readonly mapper?: (value: T) => Iterable<R>) { }
+	public constructor (private readonly stream: Iterator<T>, private readonly mapper?: (value: T) => Iterable<R>) { }
 
 	public next () {
 		while (true) {
 			while (!this.subIterable) {
-				this.stream.next();
-				if (this.stream.done) {
-					this._done = true;
-					return;
+				const { done, value: nextIterable } = this.stream.next();
+				if (done) {
+					this.done = true;
+					return this;
 				}
 
-				let nextPotentialSubiterable: any = this.stream.value;
+				let nextPotentialSubiterable: any = nextIterable;
 				if (this.mapper) {
-					nextPotentialSubiterable = this.mapper(this.stream.value);
+					nextPotentialSubiterable = this.mapper(nextIterable);
 				}
 
 				if (typeof nextPotentialSubiterable !== "object" || !(Symbol.iterator in nextPotentialSubiterable)) {
@@ -43,8 +38,8 @@ export default class FlatMapStream<T, R> implements Streamable<R> {
 				continue;
 			}
 
-			this._value = value.value;
-			break;
+			this.value = value.value;
+			return this;
 		}
 	}
 }

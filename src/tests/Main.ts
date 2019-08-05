@@ -38,11 +38,7 @@ describe("Stream", () => {
 					for (let j = 0; j < i; j++)
 						set.add(`${Math.random()}-${j}-${i}`);
 
-					const stream = Stream.of(...set);
-					for (const value of stream)
-						set.add(value);
-
-					expect(set.size).eq(i);
+					expect([...Stream.of(...set)]).ordered.members([...set]);
 				}
 			});
 		});

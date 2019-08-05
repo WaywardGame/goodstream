@@ -1,23 +1,19 @@
-import { Streamable } from "./IStream";
 import Stream from "./Stream";
 
-export default class Partitions<K, V> implements Streamable<[K, Stream<V>]> {
+export default class Partitions<K, V> implements Iterator<[K, Stream<V>]>, IteratorResult<[K, Stream<V>]> {
+	public value: [K, Stream<V>];
+	public done = false;
 
 	private readonly _partitions: Map<K, [Partition<V>, Stream<V>]> = new Map();
 	private readonly partitionKeys: K[] = [];
 	private partitionKeyIndex = 0;
 
-	private _value: [K, Stream<V>];
-	private _done = false;
 	private index = 0;
 
-	public get value () { return this._value; }
-	public get done () { return this._done; }
-
 	public constructor (
-		private readonly stream: Streamable<V>,
+		private readonly stream: Iterator<V>,
 		private readonly sorter: (val: V, index: number) => K,
-		private readonly streamMapper: <V2>(val: Streamable<V2>) => Stream<V2>,
+		private readonly streamMapper: <V2>(val: Iterator<V2>) => Stream<V2>,
 	) { }
 
 	/**
@@ -70,11 +66,11 @@ export default class Partitions<K, V> implements Streamable<[K, Stream<V>]> {
 
 		while (true) {
 			this.next();
-			if (this._done) {
+			if (this.done) {
 				return result;
 			}
 
-			const [key, value] = this._value;
+			const [key, value] = this.value;
 			result.set(key, mapper ? mapper(value, key) : value);
 		}
 	}
@@ -97,34 +93,34 @@ export default class Partitions<K, V> implements Streamable<[K, Stream<V>]> {
 		if (this.partitionKeyIndex < this.partitionKeys.length) {
 			key = this.partitionKeys[this.partitionKeyIndex++];
 			[, partitionStream] = this.getPartition(key);
-			this._value = [key, partitionStream];
-			return;
+			this.value = [key, partitionStream];
+			return this;
 		}
 
 		while (true) {
-			this.stream.next();
-			if (this.stream.done) {
-				this._done = true;
-				return;
+			const { done, value } = this.stream.next();
+			if (done) {
+				this.done = true;
+				return this;
 			}
 
 			let willContinue = false;
-			const sortedKey = this.sorter(this.stream.value, this.index++);
+			const sortedKey = this.sorter(value, this.index++);
 			if (this._partitions.has(sortedKey)) {
 				willContinue = true;
 			}
 
 			let partition: Partition<V>;
 			[partition, partitionStream] = this.getPartition(sortedKey);
-			partition.add(this.stream.value);
+			partition.add(value);
 
 			if (willContinue) {
 				continue;
 			}
 
-			this._value = [sortedKey, partitionStream];
+			this.value = [sortedKey, partitionStream];
 			this.partitionKeyIndex++;
-			break;
+			return this;
 		}
 	}
 
@@ -142,48 +138,46 @@ export default class Partitions<K, V> implements Streamable<[K, Stream<V>]> {
 	private getFunctionForRetrievingNextInPartition (key: K) {
 		return () => {
 			while (true) {
-				this.stream.next();
-				if (this.stream.done) {
+				const { done, value } = this.stream.next();
+				if (done) {
 					return { done: true, value: undefined };
 				}
 
-				const sortedKey = this.sorter(this.stream.value, this.index++);
+				const sortedKey = this.sorter(value, this.index++);
 				if (sortedKey === key) {
-					return { done: false, value: this.stream.value };
+					return { done: false, value };
 				}
 
 				const [partition] = this.getPartition(sortedKey);
-				partition.add(this.stream.value);
+				partition.add(value);
 			}
 		};
 	}
 }
 
-class Partition<T> implements Streamable<T> {
+class Partition<T> implements Iterator<T>, IteratorResult<T> {
+	public value: T;
+	public done = false;
+
 	private readonly items: T[] = [];
 	private index = 0;
-
-	private _value: T;
-	private _done = false;
-
-	public get value () { return this._value; }
-	public get done () { return this._done; }
 
 	public constructor (private readonly getNext: () => { done: boolean; value?: T }) { }
 
 	public next () {
 		if (this.index < this.items.length) {
-			this._value = this.items[this.index++];
-			return;
+			this.value = this.items[this.index++];
+			return this;
 		}
 
 		const value = this.getNext();
 		if (value.done) {
-			this._done = true;
-			return;
+			this.done = true;
+			return this;
 		}
 
-		this._value = value.value!;
+		this.value = value.value!;
+		return this;
 	}
 
 	public add (...items: T[]) {

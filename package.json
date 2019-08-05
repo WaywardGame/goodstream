@@ -26,6 +26,7 @@
 		"@types/chai-as-promised": "7.1.0",
 		"@types/gulp-mocha": "0.0.32",
 		"@types/node": "12.6.8",
-		"tslint-override": "0.5.1"
+		"tslint-override": "0.5.1",
+		"sequency": "0.19.2"
 	}
 }
