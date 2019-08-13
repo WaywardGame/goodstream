@@ -8,6 +8,9 @@ import { isIterable } from "./util/Iterables";
 
 type Flat1<T> = T extends Iterable<infer X> ? X | Extract<T, string> | Exclude<T, Iterable<any>> : never;
 
+type Key<T> = T extends [infer K, any] ? K : T extends readonly [infer K2, any] ? K2 : never;
+type Value<T> = T extends [any, infer V] ? V : T extends readonly [any, infer V2] ? V2 : never;
+
 const LAST = Symbol();
 
 /**
@@ -484,7 +487,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	/**
 	 * Appends the items in this Stream to the end of the given array.
 	 */
-	toArray<N> (array: N[]): (T | N)[];
+	toArray<E> (array: T extends E ? E[] : never): E[];
 	/**
 	 * Collects the items in this Stream to an array, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
@@ -495,7 +498,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param array The array to insert into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
 	 */
-	toArray<N, M> (array: N[], mapper: (value: T, index: number) => M): (T | N | M)[];
+	toArray<E, M> (array: M extends E ? E[] : never, mapper: (value: T, index: number) => M): E[];
 
 	/**
 	 * Collects the items in this Stream to a Set.
@@ -504,7 +507,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	/**
 	 * Appends the items in this Stream to the end of the given Set.
 	 */
-	toSet<N> (set: Set<N>): Set<T | N>;
+	toSet<E> (set: T extends E ? Set<E> : never): Set<E>;
 	/**
 	 * Collects the items in this Stream to a Set, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
@@ -515,7 +518,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param set The set to insert into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
 	 */
-	toSet<N, M> (set: Set<N>, mapper: (value: T, index: number) => M): Set<T | N | M>;
+	toSet<E, M> (set: M extends E ? Set<E> : never, mapper: (value: T, index: number) => M): Set<E>;
 
 	/**
 	 * Constructs a Map instance from the key-value pairs in this Stream.
@@ -524,7 +527,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	/**
 	 * Puts the key-value pairs in this Stream into the given Map.
 	 */
-	toMap<KE, VE> (map: Map<KE, VE>): T extends [infer K, infer V] ? Map<K | KE, V | VE> : never;
+	toMap<KE, VE> (map: Key<T> extends KE ? Value<T> extends VE ? Map<KE, VE> : never : never): Map<KE, VE>;
 	/**
 	 * Constructs a Map instance from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
@@ -535,7 +538,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toMap<K, V, KE, VE> (map: Map<KE, VE>, mapper: (value: T, index: number) => [K, V]): Map<K | KE, V | VE>;
+	toMap<KM, VM, KE, VE> (map: KM extends KE ? VM extends VE ? Map<KE, VE> : never : never, mapper: (value: T, index: number) => [KM, VM]): Map<KE, VE>;
 
 	/**
 	 * Constructs an object from the key-value pairs in this Stream.
@@ -544,7 +547,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	/**
 	 * Puts the key-value pairs in this Stream into the given object.
 	 */
-	toObject<O> (obj: O): T extends [infer K, infer V] ? O & { [key in Extract<K, string | number | symbol>]: V } : never;
+	toObject<E> (obj: Key<T> extends keyof E ? Value<T> extends E[keyof E] ? E : never : never): E;
 	/**
 	 * Constructs an object from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
@@ -555,7 +558,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toObject<K extends string | number | symbol, V, O> (obj: O, mapper: (value: T, index: number) => [K, V]): O & { [key in K]: V };
+	toObject<KM extends string | number | symbol, VM, E> (obj: KM extends keyof E ? VM extends E[keyof E] ? E : never : never, mapper: (value: T, index: number) => [KM, VM]): E;
 
 	/**
 	 * Combines the items in this Stream into a string.
