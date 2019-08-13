@@ -11,6 +11,8 @@ type Flat1<T> = T extends Iterable<infer X> ? X | Extract<T, string> | Exclude<T
 type Key<T> = T extends [infer K, any] ? K : T extends readonly [infer K2, any] ? K2 : never;
 type Value<T> = T extends [any, infer V] ? V : T extends readonly [any, infer V2] ? V2 : never;
 
+type Unary<T, R = void> = (arg: T) => R;
+
 const LAST = Symbol();
 
 /**
@@ -498,7 +500,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param array The array to insert into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
 	 */
-	toArray<E, M> (array: M extends E ? E[] : never, mapper: (value: T, index: number) => M): E[];
+	toArray<E, M extends E> (array: E[], mapper: (value: T, index: number) => M): E[];
 
 	/**
 	 * Collects the items in this Stream to a Set.
@@ -518,7 +520,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param set The set to insert into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a replacement item.
 	 */
-	toSet<E, M> (set: M extends E ? Set<E> : never, mapper: (value: T, index: number) => M): Set<E>;
+	toSet<E, M extends E> (set: Set<E>, mapper: (value: T, index: number) => M): Set<E>;
 
 	/**
 	 * Constructs a Map instance from the key-value pairs in this Stream.
@@ -527,7 +529,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	/**
 	 * Puts the key-value pairs in this Stream into the given Map.
 	 */
-	toMap<KE, VE> (map: Key<T> extends KE ? Value<T> extends VE ? Map<KE, VE> : never : never): Map<KE, VE>;
+	toMap<KE, VE> (map: Unary<Key<T>> extends Unary<KE> ? Unary<Value<T>> extends Unary<VE> ? Map<KE, VE> : never : never): Map<KE, VE>;
 	/**
 	 * Constructs a Map instance from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
@@ -538,27 +540,27 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toMap<KM, VM, KE, VE> (map: KM extends KE ? VM extends VE ? Map<KE, VE> : never : never, mapper: (value: T, index: number) => [KM, VM]): Map<KE, VE>;
+	toMap<KE, VE, KM extends KE, VM extends VE> (map: Map<KE, VE>, mapper: (value: T, index: number) => [KM, VM]): Map<KE, VE>;
 
 	/**
 	 * Constructs an object from the key-value pairs in this Stream.
 	 */
 	toObject (): T extends [infer K, infer V] ? { [key in Extract<K, string | number | symbol>]: V } : never;
 	/**
-	 * Puts the key-value pairs in this Stream into the given object.
-	 */
-	toObject<E> (obj: Key<T> extends keyof E ? Value<T> extends E[keyof E] ? E : never : never): E;
-	/**
 	 * Constructs an object from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
 	toObject<K extends string | number | symbol, V> (mapper: (value: T, index: number) => [K, V]): { [key in K]: V };
 	/**
+	 * Puts the key-value pairs in this Stream into the given object.
+	 */
+	toObject<E> (obj: Unary<Key<T>> extends Unary<keyof E> ? Unary<Value<T>> extends Unary<E[keyof E]> ? E : never : never): E;
+	/**
 	 * Puts the key-value pairs in this Stream into the given object, using a mapping function.
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toObject<KM extends string | number | symbol, VM, E> (obj: KM extends keyof E ? VM extends E[keyof E] ? E : never : never, mapper: (value: T, index: number) => [KM, VM]): E;
+	toObject<E, KM extends keyof E, VM extends E[keyof E]> (obj: E, mapper: (value: T, index: number) => [KM, VM]): E;
 
 	/**
 	 * Combines the items in this Stream into a string.
@@ -569,7 +571,25 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * Combines the items in this Stream into a string, via a reducer function.
 	 * @param concatenator Takes the current string and the next value and returns the new string.
 	 */
-	toString (concatenator: (current: string, value: T) => string): string;
+	toString (concatenator: (current: string | undefined, value: T) => string): string;
+	/**
+	 * Combines the items in this Stream into a string, via a reducer function.
+	 * @param concatenator Takes the current string and the next value and returns the new string.
+	 * @param startingString Concatenates against this string.
+	 */
+	toString (concatenator: (current: string, value: T) => string, startingString: string): string;
+	/**
+	 * Combines the items in this Stream into a string, via a reducer function.
+	 * @param concatenator Takes the current string and the next value and returns the new string.
+	 * @param toStringFirstValue Calls `toString` on the first value in this Stream for concatenating against future values.
+	 */
+	toString (concatenator: (current: string, value: T) => string, toStringFirstValue: true): string;
+	/**
+	 * Combines the items in this Stream into a string, via a reducer function.
+	 * @param concatenator Takes the current string and the next value and returns the new string.
+	 * @param firstValueMapper A function which converts the first value in the stream into a string, in order to be concatenated with subsequent values.
+	 */
+	toString (concatenator: (current: string, value: T) => string, firstValueMapper: (value: T) => string): string;
 
 	/**
 	 * Iterates through the entire stream.
@@ -613,7 +633,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
 	 * Runs a function on each item in this Stream.
 	 * @param user The function to call for each item
 	 */
-	splatEach (user: T extends any[] ? ((...args: T) => any) : never): void;
+	splatEach (user: T extends Iterable<infer V> ? ((...args: V[]) => any) : never): void;
 
 	next (): IteratorResult<T>;
 
@@ -1240,20 +1260,26 @@ class StreamImplementation<T> implements Stream<T> {
 	}
 
 	public toString (concatenator?: string): string;
-	public toString (concatenator: (current: string, value: T) => string): string;
-	public toString (concatenator: string | ((current: string, value: T) => string) = "") {
-		let result = "";
+	public toString (concatenator: (current: string | undefined, value: T) => string): string;
+	public toString (concatenator: (current: string, value: T) => string, startingValue: string | true | ((value: T) => string)): string;
+	public toString (concatenator: string | ((current: string, value: T) => string) = "", startingValue?: string | true | ((value: T) => string)) {
+		let result: string | undefined;
 		while (true) {
 			this.next();
 			if (this.done) {
-				return typeof concatenator === "string" ? result.slice(concatenator.length) : result;
+				return result === undefined ? ""
+					: typeof concatenator === "string" ? result.slice(concatenator.length) : result;
 			}
 
 			if (typeof concatenator === "string") {
+				if (result === undefined) result = "";
 				result += `${concatenator}${this.value}`;
 
 			} else {
-				result = concatenator(result, this.value);
+				if (result !== undefined) result = concatenator(result, this.value);
+				else result = typeof startingValue === "function" ? startingValue(this.value)
+					: startingValue === true ? `${this.value}`
+						: concatenator(startingValue!, this.value);
 			}
 		}
 	}

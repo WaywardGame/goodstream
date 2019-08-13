@@ -26,6 +26,61 @@ describe("Stream", () => {
 				expect(Stream.is([][Symbol.iterator]())).false;
 			});
 		});
+
+		it("'forEach'", () => {
+			const arr: [string, number][] = [];
+			Stream.range(3).map(val => `val${val}`).forEach((value, index) => arr.push([value, index]));
+			expect(arr).deep.ordered.members([["val0", 0], ["val1", 1], ["val2", 2]]);
+		});
+
+		it("'splatEach'", () => {
+			const arr: number[][] = [];
+			Stream.range(3).map(() => Stream.range(3)).splatEach((...numbers) => arr.push(numbers));
+			expect(arr).deep.ordered.members([[0, 1, 2], [0, 1, 2], [0, 1, 2]]);
+		});
+
+		describe("'hasNext'", () => {
+			it("should return whether there's a next value without moving past it", () => {
+				expect(Stream.of().hasNext()).false;
+				const streamWithItem = Stream.range(3);
+				expect(streamWithItem.hasNext()).true;
+				expect([...streamWithItem]).ordered.members([0, 1, 2]);
+			});
+		});
+
+		////////////////////////////////////
+		// iterateToEnd aliases
+		//
+
+		it("'iterateToEnd'", () => {
+			const arr: number[] = [];
+			Stream.range(3).map(val => arr.push(val)).iterateToEnd();
+			expect(arr).ordered.members([0, 1, 2]);
+		});
+
+		it("'finish'", () => {
+			const arr: number[] = [];
+			Stream.range(3).map(val => arr.push(val)).finish();
+			expect(arr).ordered.members([0, 1, 2]);
+		});
+
+		it("'end'", () => {
+			const arr: number[] = [];
+			Stream.range(3).map(val => arr.push(val)).end();
+			expect(arr).ordered.members([0, 1, 2]);
+		});
+
+		it("'complete'", () => {
+			const arr: number[] = [];
+			Stream.range(3).map(val => arr.push(val)).complete();
+			expect(arr).ordered.members([0, 1, 2]);
+		});
+
+		it("'flush'", () => {
+			const arr: number[] = [];
+			Stream.range(3).map(val => arr.push(val)).flush();
+			expect(arr).ordered.members([0, 1, 2]);
+		});
 	});
 
 	describe("creation helper", () => {
@@ -900,6 +955,96 @@ describe("Stream", () => {
 				return Promise.all([
 					expect(Stream.of(Promise.reject("rejected")).rest().then(s => [...s])).rejectedWith("rejected"),
 				]);
+			});
+		});
+
+		describe("'toArray'", () => {
+			it("should collect all values in the stream into an array", () => {
+				expect(Stream.range(3).toArray()).ordered.members([0, 1, 2]);
+				expect(Stream.of("foo", "bar", "bazz").toArray()).ordered.members(["foo", "bar", "bazz"]);
+			});
+
+			it("should push the values into the end of an existing array", () => {
+				expect(Stream.range(3).toArray([8, 9])).ordered.members([8, 9, 0, 1, 2]);
+			});
+
+			it("should map the values before creating the array", () => {
+				expect(Stream.range(3).toArray(v => v + 1)).ordered.members([1, 2, 3]);
+			});
+
+			it("should map the values before pushing values into an existing array", () => {
+				expect(Stream.range(3).toArray([8, 9], v => v + 1)).ordered.members([8, 9, 1, 2, 3]);
+			});
+		});
+
+		describe("'toSet'", () => {
+			it("should collect all values in the stream into a set", () => {
+				expect([...Stream.range(3).toSet()]).ordered.members([0, 1, 2]);
+				expect([...Stream.of("foo", "bar", "bazz").toSet()]).ordered.members(["foo", "bar", "bazz"]);
+			});
+
+			it("should push the values into the end of an existing set", () => {
+				expect([...Stream.range(3).toSet(new Set([8, 9]))]).ordered.members([8, 9, 0, 1, 2]);
+			});
+
+			it("should map the values before creating the set", () => {
+				expect([...Stream.range(3).toSet(v => v + 1)]).ordered.members([1, 2, 3]);
+			});
+
+			it("should map the values before pushing values into an existing set", () => {
+				expect([...Stream.range(3).toSet(new Set([8, 9]), v => v + 1)]).ordered.members([8, 9, 1, 2, 3]);
+			});
+		});
+
+		describe("'toMap'", () => {
+			it("should collect all values in the stream into a map", () => {
+				expect([...Stream.of(tuple("bar", 8), tuple("foo", 9), tuple("test", 1)).toMap()]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should push the values into the end of an existing map", () => {
+				expect([...Stream.of(tuple("test", 1)).toMap(new Map([["bar", 8], ["foo", 9]]))]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should map the values before creating the map", () => {
+				expect([...Stream.range(3).toMap(v => [`${v}key`, v + 1])]).deep.ordered.members([["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+
+			it("should map the values before pushing values into an existing map", () => {
+				expect([...Stream.range(3).toMap(new Map([["bar", 8], ["foo", 9]]), v => [`${v}key`, v + 1])]).deep.ordered.members([["bar", 8], ["foo", 9], ["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+		});
+
+		describe("'toObject'", () => {
+			it("should collect all values in the stream into a object", () => {
+				expect([...Object.entries(Stream.of(tuple("bar", 8), tuple("foo", 9), tuple("test", 1)).toObject())]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should push the values into the end of an existing object", () => {
+				expect([...Object.entries(Stream.of(tuple("test", 1)).toObject({ bar: 8, foo: 9 }))]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should map the values before creating the object", () => {
+				expect([...Object.entries(Stream.range(3).toObject(v => [`${v}key`, v + 1]))]).deep.ordered.members([["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+
+			it("should map the values before pushing values into an existing object", () => {
+				expect([...Object.entries(Stream.range(3).toObject({ bar: 8, foo: 9 }, v => [`${v}key` as "bar", v + 1]))]).deep.ordered.members([["bar", 8], ["foo", 9], ["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+		});
+
+		describe("'toString'", () => {
+			it("should collect all values in the stream into a string", () => {
+				expect(Stream.range(3).toString()).eq("012");
+			});
+
+			it("should accept a string concatenator", () => {
+				expect(Stream.range(3).toString(",")).eq("0,1,2");
+			});
+
+			it("should accept a concatenator function", () => {
+				expect(Stream.range(3).toString((str, value) => `${value},${str}`)).eq("2,1,0,undefined");
+				expect(Stream.range(3).toString((str, value) => `${value},${str}`, true)).eq("2,1,0");
+				expect(Stream.range(3).toString((str, value) => `${value},${str}`, value => `thing${value}`)).eq("2,1,thing0");
 			});
 		});
 	});
