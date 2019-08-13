@@ -34,9 +34,11 @@ describe("Stream", () => {
 		});
 
 		it("'splatEach'", () => {
-			const arr: number[][] = [];
-			Stream.range(3).map(() => Stream.range(3)).splatEach((...numbers) => arr.push(numbers));
-			expect(arr).deep.ordered.members([[0, 1, 2], [0, 1, 2], [0, 1, 2]]);
+			it("should execute a callback for each iterable member of this stream, splatting all values into the call", () => {
+				const arr: number[][] = [];
+				Stream.range(3).map(() => Stream.range(3)).splatEach((...numbers) => arr.push(numbers));
+				expect(arr).deep.ordered.members([[0, 1, 2], [0, 1, 2], [0, 1, 2]]);
+			});
 		});
 
 		describe("'hasNext'", () => {
