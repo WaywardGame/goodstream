@@ -10,7 +10,7 @@
 		"tslint": "5.18.0",
 		"gulp": "4.0.2",
 		"gulp-plumber": "1.2.1",
-		"merge2": "1.2.3",
+		"merge2": "1.2.4",
 		"typescript": "3.5.3",
 		"gulp-typescript": "5.0.1",
 		"mocha": "6.2.0",
@@ -22,11 +22,10 @@
 		"@types/del": "4.0.0",
 		"@types/gulp": "4.0.6",
 		"@types/mocha": "5.2.7",
-		"@types/chai": "4.1.7",
-		"@types/chai-as-promised": "7.1.0",
+		"@types/chai": "4.2.0",
+		"@types/chai-as-promised": "7.1.2",
 		"@types/gulp-mocha": "0.0.32",
-		"@types/node": "12.6.8",
-		"tslint-override": "0.5.1",
-		"sequency": "0.19.2"
+		"@types/node": "12.7.1",
+		"tslint-override": "0.5.1"
 	}
 }

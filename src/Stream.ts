@@ -1134,7 +1134,7 @@ class StreamImplementation<T> implements Stream<T> {
 	}
 
 	public async rest (): Promise<any> {
-		return new StreamImplementation((await Promise.all(this.toArray())).values()) as any;
+		return new StreamImplementation((await Promise.all(this.toArray()))[Symbol.iterator]()) as any;
 	}
 
 	public toArray (): T[];

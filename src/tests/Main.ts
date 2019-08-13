@@ -8,6 +8,10 @@ import { tuple } from "../util/Arrays";
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
+async function sleep<T> (ms: number, returnValue?: T) {
+	return new Promise<T>(resolve => setTimeout(() => resolve(returnValue), ms));
+}
+
 describe("Stream", () => {
 
 	describe("misc helper", () => {
@@ -856,6 +860,46 @@ describe("Stream", () => {
 
 			it("should also pass any additional arguments", () => {
 				expect(Stream.range(3).splat((...nums) => nums, 3, 4, 5)).ordered.members([0, 1, 2, 3, 4, 5]);
+			});
+		});
+
+		describe("'race'", () => {
+			it("should return the first completed promise in the stream", () => {
+				return Promise.all([
+					expect(Stream.of(sleep(100, 0), sleep(200, 1), sleep(300, 2)).race()).eventually.eq(0),
+					expect(Stream.of(sleep(1000, 0), sleep(200, 1), sleep(300, 2)).race()).eventually.eq(1),
+					expect(Stream.of(sleep(1000, 0), sleep(0, 1), sleep(300, 2)).race()).eventually.eq(1),
+					expect(Stream.of(0, sleep(100, 1), 2).race()).eventually.eq(0),
+				]);
+			});
+
+			it("should reject the entire thing if a value is a rejected promise", () => {
+				return Promise.all([
+					expect(Stream.of(Promise.reject("rejected")).race()).rejectedWith("rejected"),
+				]);
+			});
+
+			it("should not reject the entire thing if a promise is resolved before a promise is rejected", () => {
+				return Promise.all([
+					expect(Stream.of(Promise.resolve("resolved"), Promise.reject("rejected")).race()).eventually.eq("resolved"),
+				]);
+			});
+		});
+
+		describe("'rest'", () => {
+			it("should return a new stream with all values awaited", () => {
+				return Promise.all([
+					expect(Stream.of(sleep(100, 0), sleep(200, 1), sleep(300, 2)).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
+					expect(Stream.of(sleep(1000, 0), sleep(200, 1), sleep(300, 2)).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
+					expect(Stream.of(sleep(1000, 0), sleep(100, 1), sleep(3, 2)).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
+					expect(Stream.of(0, sleep(100, 1), 2).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
+				]);
+			});
+
+			it("should reject the entire thing if a value is a rejected promise", () => {
+				return Promise.all([
+					expect(Stream.of(Promise.reject("rejected")).rest().then(s => [...s])).rejectedWith("rejected"),
+				]);
 			});
 		});
 	});
