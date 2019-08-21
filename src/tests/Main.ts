@@ -33,7 +33,7 @@ describe("Stream", () => {
 			expect(arr).deep.ordered.members([["val0", 0], ["val1", 1], ["val2", 2]]);
 		});
 
-		it("'splatEach'", () => {
+		describe("'splatEach'", () => {
 			it("should execute a callback for each iterable member of this stream, splatting all values into the call", () => {
 				const arr: number[][] = [];
 				Stream.range(3).map(() => Stream.range(3)).splatEach((...numbers) => arr.push(numbers));
