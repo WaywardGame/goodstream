@@ -53,6 +53,7 @@
 		"no-internal-module": false,
 		"forin": false,
 		"no-consecutive-blank-lines": [true, 2],
+		"no-trailing-whitespace": [true, "ignore-jsdoc"],
 		"no-reference": false,
 		"new-parens": false,
 		"radix": false,

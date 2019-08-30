@@ -1565,6 +1565,11 @@ module StreamImplementation {
 		// throw new Error(`Not an iterable value: ${iterable}`);
 	}
 
+	// tslint:disable-next-line no-shadowed-variable
+	export function iterators<ITERATORS extends Iterator<any>[]> (...iterators: ITERATORS): Stream<ITERATORS[number] extends Iterator<infer T> ? T : never> {
+		return new StreamImplementation(...iterators) as any;
+	}
+
 	export function of<A extends any[]> (...args: A): Stream<A[number]> {
 		return new StreamImplementation(args[Symbol.iterator]());
 	}
