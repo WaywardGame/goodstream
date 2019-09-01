@@ -135,7 +135,7 @@ const methods: (Extract<keyof IterableIterator<any>, keyof Stream<any>>)[] = [
 ];
 
 for (const method of methods) {
-	Define(PROTOTYPES_ITERABLE_ITERATOR, method, function (...args) {
+	Define.all(PROTOTYPES_ITERABLE_ITERATOR, method, function (...args) {
 		return (Stream.from(this)[method] as (...args: any) => never)(...args);
 	});
 }

@@ -14,10 +14,10 @@
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "noUnusedParameters": false,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "types": ["mocha"]
     },
     "include": [
-        "gulpfile.ts",
-        "gulp/**/*.ts"
+        "**/*.ts"
     ]
 }

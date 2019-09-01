@@ -1,21 +1,21 @@
 {
     "compilerOptions": {
-        "forceConsistentCasingInFileNames": true,
-        "module": "commonjs",
-        "noImplicitReturns": true,
-        "noUnusedLocals": true,
-        "esModuleInterop": true,
         "declaration": true,
-        "noUnusedParameters": false,
-        "strict": true,
-        "strictPropertyInitialization": false,
-        "experimentalDecorators": true,
         "target": "esnext",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
         "plugins": [
             {
                 "name": "typescript-tslint-plugin"
             }
-        ]
+        ],
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "strictPropertyInitialization": false
     },
     "include": [
         "**/*.ts"

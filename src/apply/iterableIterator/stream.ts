@@ -8,6 +8,6 @@ declare global {
 	}
 }
 
-Define(PROTOTYPES_ITERABLE_ITERATOR, "stream", function () {
+Define.all(PROTOTYPES_ITERABLE_ITERATOR, "stream", function () {
 	return Stream.from(this);
 });

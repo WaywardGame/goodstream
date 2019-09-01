@@ -1,9 +1,7 @@
-/// <reference types="mocha" />
-
-import * as chai from "chai";
+import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import Stream from "../Stream";
-import { tuple } from "../util/Arrays";
+import Stream from "../build/Stream";
+import { tuple } from "../build/util/Arrays";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
