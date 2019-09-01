@@ -12,13 +12,15 @@ declare global {
 }
 
 Define(Function.prototype, "dropFirst", function () {
-	return (...args: any[]) => {
-		this(...args.slice(1));
+	const functionToCall = this;
+	return function (this: any, ...args: any[]) {
+		return functionToCall.apply(this, args.slice(1));
 	};
 });
 
 Define(Function.prototype, "dropParams", function (amt) {
-	return (...args: any[]) => {
-		this(...args.slice(amt));
+	const functionToCall = this;
+	return function (this: any, ...args: any[]) {
+		return functionToCall.apply(this, args.slice(amt));
 	};
 });
