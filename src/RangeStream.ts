@@ -1,5 +1,5 @@
 export default function rangeIterator (start: number, end: number, step: number): Iterator<number> {
-	let result: IteratorResult<number>;
+	let result: IteratorResult<number, number>;
 	if (end === start) {
 		result = { done: true, value: NaN };
 	} else {
@@ -24,7 +24,7 @@ export default function rangeIterator (start: number, end: number, step: number)
 				if (!result.done) {
 					result.value += step;
 					if (result.value >= end) {
-						result.done = true;
+						(result as any).done = true;
 					}
 				}
 				return result;
@@ -36,7 +36,7 @@ export default function rangeIterator (start: number, end: number, step: number)
 				if (!result.done) {
 					result.value += step;
 					if (result.value <= end) {
-						result.done = true;
+						(result as any).done = true;
 					}
 				}
 				return result;

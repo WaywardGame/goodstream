@@ -1,4 +1,4 @@
-export default class FlatMapStream<T, R> implements Iterator<R>, IteratorResult<R> {
+export default class FlatMapStream<T, R> implements Iterator<R> {
 	public value: R;
 	public done = false;
 

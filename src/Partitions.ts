@@ -1,6 +1,6 @@
 import Stream from "./Stream";
 
-export default class Partitions<K, V> implements Iterator<[K, Stream<V>]>, IteratorResult<[K, Stream<V>]> {
+export default class Partitions<K, V> implements Iterator<[K, Stream<V>]> {
 	public value: [K, Stream<V>];
 	public done = false;
 
@@ -155,7 +155,7 @@ export default class Partitions<K, V> implements Iterator<[K, Stream<V>]>, Itera
 	}
 }
 
-class Partition<T> implements Iterator<T>, IteratorResult<T> {
+class Partition<T> implements Iterator<T> {
 	public value: T;
 	public done = false;
 

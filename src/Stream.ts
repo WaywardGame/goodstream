@@ -25,7 +25,7 @@ const LAST = Symbol();
  * [...Stream.range(10).toArray()]
  * ```
  */
-interface Stream<T> extends Iterator<T>, Iterable<T>, IteratorResult<T> {
+interface Stream<T> extends Iterator<T>, Iterable<T> {
 
 	done: boolean;
 	value: T;

@@ -6,6 +6,9 @@ declare global {
 	interface IterableIterator<T> {
 		stream (): Stream<T>;
 	}
+	interface Generator<T = unknown, TReturn = any, TNext = unknown> {
+		stream (): Stream<T>;
+	}
 }
 
 Define.all(PROTOTYPES_ITERABLE_ITERATOR, "stream", function () {

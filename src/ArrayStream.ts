@@ -1,7 +1,7 @@
 import { tuple } from "./util/Arrays";
 import { Override } from "./util/decorator/Override";
 
-export class ArrayStream<T, R = T> implements Iterator<R>, IteratorResult<R> {
+export class ArrayStream<T, R = T> implements Iterator<R> {
 	public done = false;
 	public value: R;
 	protected index: number;
