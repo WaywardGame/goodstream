@@ -633,7 +633,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Runs a function on each item in this Stream.
 	 * @param user The function to call for each item
 	 */
-	splatEach (user: T extends Iterable<infer V> ? ((...args: V[]) => any) : never): void;
+	splatEach (user: T extends any[] ? ((...args: T) => any) : T extends Iterable<infer V> ? ((...args: V[]) => any) : never): void;
 
 	next (): IteratorResult<T>;
 
