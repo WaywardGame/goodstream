@@ -1,5 +1,5 @@
 {
-	"name": "goodstream",
+	"name": "@wayward/goodstream",
 	"description": "Value streaming made as convenient as possible.",
 	"version": "0.2.0",
 	"license": "MIT",
