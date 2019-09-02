@@ -1575,12 +1575,13 @@ module StreamImplementation {
 		return new StreamImplementation<T>();
 	}
 
-	export function from<T> (iterable: Iterable<T> | (() => IterableIterator<T>)): Stream<T> {
-		// if (typeof iterable === "function") return new StreamImplementation(iterable());
-		// if (iterable instanceof StreamImplementation) return iterable;
-		// if (Symbol.iterator in iterable)
-		return new StreamImplementation((iterable as any)[Symbol.iterator]()) as any;
-		// throw new Error(`Not an iterable value: ${iterable}`);
+	export function from<T> (iterable?: Iterable<T> | (() => Iterable<T> | undefined)): Stream<T> {
+		if (typeof iterable === "function") iterable = iterable();
+		if (iterable === undefined) return Stream.empty();
+		if (iterable instanceof StreamImplementation) return iterable;
+		if (Symbol.iterator in iterable)
+			return new StreamImplementation((iterable as any)[Symbol.iterator]()) as any;
+		throw new Error(`Not an iterable value: ${iterable}`);
 	}
 
 	// tslint:disable-next-line no-shadowed-variable

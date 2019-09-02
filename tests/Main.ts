@@ -103,6 +103,22 @@ describe("Stream", () => {
 		});
 
 		describe("'from'", () => {
+			it("should accept a function", () => {
+				expect([...Stream.from(() => [1, 2, 3])]).ordered.members([1, 2, 3]);
+			});
+
+			it("should return an empty stream when given no value", () => {
+				let stream = Stream.from();
+				expect(stream).instanceOf(Stream);
+				expect([...stream]).members([]);
+				stream = Stream.from(undefined);
+				expect(stream).instanceOf(Stream);
+				expect([...stream]).members([]);
+				stream = Stream.from(() => undefined);
+				expect(stream).instanceOf(Stream);
+				expect([...stream]).members([]);
+			});
+
 			it("should stream the iterator of an array", () => {
 				expect([...Stream.from([1, 2, 3])]).ordered.members([1, 2, 3]);
 			});

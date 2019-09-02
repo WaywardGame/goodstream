@@ -64,7 +64,7 @@ describe("apply", () => {
 		describe("stream", () => {
 			it("should return a stream from this array", () => {
 				const stream = [1, 2, 3, 4, 5].stream();
-				expect(Stream.is(stream)).true;
+				expect(stream).instanceOf(Stream);
 				expect(stream.toArray()).ordered.members([1, 2, 3, 4, 5]);
 			});
 		});
@@ -108,7 +108,7 @@ describe("apply", () => {
 			it("should return a stream from this iterable iterator", () => {
 				for (const iterableIterator of iterableIterators()) {
 					const stream = iterableIterator.stream();
-					expect(Stream.is(stream)).true;
+					expect(stream).instanceOf(Stream);
 					expect(stream.toArray()).ordered.members([1, 2, 3, 4, 5]);
 				}
 			});
@@ -138,7 +138,7 @@ describe("apply", () => {
 		describe("entryStream", () => {
 			it("should return a stream from the entries in the map", () => {
 				const stream = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]).entryStream();
-				expect(Stream.is(stream)).true;
+				expect(stream).instanceOf(Stream);
 				expect(stream.toArray()).deep.members([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]);
 			});
 		});
@@ -146,7 +146,7 @@ describe("apply", () => {
 		describe("keyStream", () => {
 			it("should return a stream from the keys in the map", () => {
 				const stream = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]).keyStream();
-				expect(Stream.is(stream)).true;
+				expect(stream).instanceOf(Stream);
 				expect(stream.toArray()).members([1, 3, 5, 235, 25]);
 			});
 		});
@@ -154,7 +154,7 @@ describe("apply", () => {
 		describe("valueStream", () => {
 			it("should return a stream from the keys in the map", () => {
 				const stream = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]).valueStream();
-				expect(Stream.is(stream)).true;
+				expect(stream).instanceOf(Stream);
 				expect(stream.toArray()).members([1, 2, 3, 4, 5]);
 			});
 		});
@@ -196,7 +196,7 @@ describe("apply", () => {
 		describe("matches", () => {
 			it("should return a stream of matches", () => {
 				const matches = /hello, ([^!]*)!/g.matches("hello, test! hello, joe! hello, mary!");
-				expect(Stream.is(matches)).true;
+				expect(matches).instanceOf(Stream);
 				const matchArray = matches.toArray();
 				expect(matchArray.length).eq(3);
 				expect(matchArray.map(arr => arr[1])).ordered.members(["test", "joe", "mary"]);
@@ -267,7 +267,7 @@ describe("apply", () => {
 		describe("stream", () => {
 			it("should return a stream from this set", () => {
 				const stream = new Set([1, 2, 3, 4, 5]).stream();
-				expect(Stream.is(stream)).true;
+				expect(stream).instanceOf(Stream);
 				expect(stream.toArray()).members([1, 2, 3, 4, 5]);
 			});
 		});
