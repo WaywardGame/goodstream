@@ -15,7 +15,10 @@
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "noUnusedParameters": false,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "lib": [
+            "esnext"
+        ]
     },
     "include": [
         "**/*.ts"
