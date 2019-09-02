@@ -251,6 +251,11 @@ describe("Stream", () => {
 				filteredStream.next();
 				expect([...stream]).ordered.members([4, 5, 6]);
 			});
+
+			it("should do nothing when given undefined or no filter function", () => {
+				expect([...Stream.range(5).filter()]).ordered.members([0, 1, 2, 3, 4]);
+				expect([...Stream.range(5).filter(undefined)]).ordered.members([0, 1, 2, 3, 4]);
+			});
 		});
 
 		describe("'map'", () => {
@@ -264,6 +269,11 @@ describe("Stream", () => {
 				mappedStream.next();
 				mappedStream.next();
 				expect([...stream]).ordered.members([2, 3, 4]);
+			});
+
+			it("should do nothing when given undefined or no filter function", () => {
+				expect([...Stream.range(5).map()]).ordered.members([0, 1, 2, 3, 4]);
+				expect([...Stream.range(5).map(undefined)]).ordered.members([0, 1, 2, 3, 4]);
 			});
 		});
 

@@ -43,7 +43,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Note: The only difference between this method and `filter2` is the type argument: This method excludes the type argument,
 	 * while the other returns it.
 	 */
-	filter<X = never> (filter: (val: T) => any): Stream<Exclude<T, X>>;
+	filter<X = never> (filter?: (val: T) => any): Stream<Exclude<T, X>>;
 
 	/**
 	 * Returns a Stream that will loop only over the entries that match the given filter
@@ -52,13 +52,13 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Note: The only difference between this method and `filter` is the type argument: This method returns the type argument,
 	 * while the other excludes it.
 	 */
-	filter2<X = T> (filter: (val: T) => any): Stream<X>;
+	filter2<X = T> (filter?: (val: T) => any): Stream<X>;
 
 	/**
 	 * Returns a Stream of type X, using the given mapper function
 	 * @param mapper A function that maps an entry of type T to its corresponding type X
 	 */
-	map<X> (mapper: (val: T) => X): Stream<X>;
+	map<X = T> (mapper?: (val: T) => X): Stream<X>;
 
 	/**
 	 * Returns a new Stream iterating over each value of the current iterator, first run through the given mapper function.
@@ -709,7 +709,9 @@ class StreamImplementation<T> implements Stream<T> {
 	// Manipulation
 	//
 
-	public filter (filter: (val: T) => any): Stream<any> {
+	public filter (filter?: (val: T) => any): Stream<any> {
+		if (!filter) return this;
+
 		if (this.savedNext.length) {
 			if (!filter(this.savedNext[0])) {
 				this.savedNext.pop();
@@ -719,11 +721,13 @@ class StreamImplementation<T> implements Stream<T> {
 		return this.getWithAction(["filter", filter]);
 	}
 
-	public filter2 (filter: (val: T) => any) {
+	public filter2 (filter?: (val: T) => any) {
 		return this.filter(filter);
 	}
 
-	public map (mapper: (val: T) => any): Stream<any> {
+	public map (mapper?: (val: T) => any): Stream<any> {
+		if (!mapper) return this;
+
 		const mappedStream = this.getWithAction(["map", mapper]);
 		if (mappedStream.savedNext.length)
 			mappedStream.savedNext[0] = mapper(this.savedNext[0]);
