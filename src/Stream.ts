@@ -43,6 +43,14 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Note: The only difference between this method and `filter2` is the type argument: This method excludes the type argument,
 	 * while the other returns it.
 	 */
+	filter<R extends T> (filter?: (val: T) => val is R): Stream<R>;
+	/**
+	 * Returns a Stream that will loop only over the entries that match the given filter
+	 * @param filter A function that returns a truthy value if the entry should be included and a falsey value if it shouldn't
+	 *
+	 * Note: The only difference between this method and `filter2` is the type argument: This method excludes the type argument,
+	 * while the other returns it.
+	 */
 	filter<X = never> (filter?: (val: T) => any): Stream<Exclude<T, X>>;
 
 	/**
@@ -709,7 +717,7 @@ class StreamImplementation<T> implements Stream<T> {
 	// Manipulation
 	//
 
-	public filter (filter?: (val: T) => any): Stream<any> {
+	public filter (filter?: (val: T) => any): any {
 		if (!filter) return this;
 
 		if (this.savedNext.length) {
