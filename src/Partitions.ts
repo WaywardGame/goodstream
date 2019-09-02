@@ -1,6 +1,6 @@
 import Stream from "./Stream";
 
-export default class Partitions<K, V> implements Iterator<[K, Stream<V>]> {
+export default class Partitions<T, K, V = T> implements Iterator<[K, Stream<V>]> {
 	public value: [K, Stream<V>];
 	public done = false;
 
@@ -13,6 +13,7 @@ export default class Partitions<K, V> implements Iterator<[K, Stream<V>]> {
 	public constructor (
 		private readonly stream: Iterator<V>,
 		private readonly sorter: (val: V, index: number) => K,
+		private readonly mapper: (val: T, index: number) => V = val => val as any,
 		private readonly streamMapper: <V2>(val: Iterator<V2>) => Stream<V2>,
 	) { }
 
@@ -112,7 +113,7 @@ export default class Partitions<K, V> implements Iterator<[K, Stream<V>]> {
 
 			let partition: Partition<V>;
 			[partition, partitionStream] = this.getPartition(sortedKey);
-			partition.add(value);
+			partition.add(this.mapper(value, this.index));
 
 			if (willContinue) {
 				continue;
@@ -138,12 +139,13 @@ export default class Partitions<K, V> implements Iterator<[K, Stream<V>]> {
 	private getFunctionForRetrievingNextInPartition (key: K) {
 		return () => {
 			while (true) {
-				const { done, value } = this.stream.next();
+				let { done, value } = this.stream.next();
 				if (done) {
 					return { done: true, value: undefined };
 				}
 
 				const sortedKey = this.sorter(value, this.index++);
+				value = this.mapper(value, this.index);
 				if (sortedKey === key) {
 					return { done: false, value };
 				}

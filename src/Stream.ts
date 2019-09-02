@@ -165,7 +165,13 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * 	.toArray(); // ["dog", "cat", "pig", "cow"]
 	 * ```
 	 */
-	partition<K> (sorter: (val: T) => K): Partitions<K, T>;
+	partition<K> (sorter: (val: T) => K): Partitions<T, K>;
+	/**
+	 * Returns a `Partitions` instance which allows sorting items of this Stream into separate sub-streams, or "partitions".
+	 * @param sorter A function which takes an item in this Stream and maps it to the "key" of its partition.
+	 * @param mapper A function which takes an item in this Stream and maps it to its new value in the partition.
+	 */
+	partition<K, V> (sorter: (val: T) => K, mapper: (val: T) => V): Partitions<T, K, V>;
 
 	/**
 	 * Returns a `Partitions` instance where the T items (should be 2-value Tuples) of this Stream are split into two
@@ -842,8 +848,8 @@ class StreamImplementation<T> implements Stream<T> {
 		return new StreamImplementation(shuffle(this.toArray(), random)[Symbol.iterator]());
 	}
 
-	public partition<K> (sorter: (val: T) => K): Partitions<any, any> {
-		return new Partitions(this, sorter, partitionStream => new StreamImplementation(partitionStream));
+	public partition (sorter: (val: T) => any, mapper?: (val: T) => any): Partitions<any, any> {
+		return new Partitions(this, sorter, mapper, partitionStream => new StreamImplementation(partitionStream));
 	}
 
 	public unzip (): any {

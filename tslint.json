@@ -58,6 +58,7 @@
 		"new-parens": false,
 		"radix": false,
 		"no-bitwise": false,
+		"prefer-const": [true, {"destructuring": "all"}],
 		
         "explicit-override": [
             true,

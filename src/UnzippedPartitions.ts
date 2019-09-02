@@ -3,7 +3,7 @@ import Stream from "./Stream";
 
 class UnzippedPartitionsImplementation<K, V> extends Partitions<any, any> implements UnzippedPartitions<K, V> {
 	public constructor (stream: Stream<[K, V]>, streamMapper: <V2>(val: Iterator<V2>) => Stream<V2>) {
-		super(stream.flatMap(), (value, index) => index % 2 ? "value" : "key", streamMapper);
+		super(stream.flatMap(), (value, index) => index % 2 ? "value" : "key", undefined, streamMapper);
 		// initialize partitions for "key" and "value" so they appear in the `.partitions()` stream
 		this.get("key");
 		this.get("value");

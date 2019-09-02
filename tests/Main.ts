@@ -470,6 +470,12 @@ describe("Stream", () => {
 					.deep.ordered.members([["k0", [0, 2, 4, 6, 8]], ["k1", [1, 3, 5, 7, 9]]]);
 			});
 
+			it("should accept a mapper for the values in the partitions", () => {
+				const partitions = Stream.range(10).partition(n => `k${n % 2}`, n => n + 3);
+				expect([...partitions.partitions().map(([partitionKey, values]) => [partitionKey, [...values]])])
+					.deep.ordered.members([["k0", [3, 5, 7, 9, 11]], ["k1", [4, 6, 8, 10, 12]]]);
+			});
+
 			it("should allow retrieving one of the partitions before streaming the rest", () => {
 				let partitions = Stream.range(10).partition(n => n % 3);
 				expect([...partitions.get(0)]).ordered.members([0, 3, 6, 9]);
