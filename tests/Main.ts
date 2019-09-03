@@ -272,6 +272,18 @@ describe("Stream", () => {
 				expect([...Stream.range(5).filter()]).ordered.members([0, 1, 2, 3, 4]);
 				expect([...Stream.range(5).filter(undefined)]).ordered.members([0, 1, 2, 3, 4]);
 			});
+
+			it("should give the current index", () => {
+				const items: number[] = [];
+				Stream.range(5).filter((_, i) => items.push(i)).flush();
+				expect(items).ordered.members([0, 1, 2, 3, 4]);
+			});
+
+			it("should not increment the current index for filtered out entries", () => {
+				const items: number[] = [];
+				Stream.range(5).filter(v => v % 2).filter((_, i) => items.push(i)).flush();
+				expect(items).ordered.members([0, 1]);
+			});
 		});
 
 		describe("'map'", () => {
@@ -290,6 +302,14 @@ describe("Stream", () => {
 			it("should do nothing when given undefined or no filter function", () => {
 				expect([...Stream.range(5).map()]).ordered.members([0, 1, 2, 3, 4]);
 				expect([...Stream.range(5).map(undefined)]).ordered.members([0, 1, 2, 3, 4]);
+			});
+
+			it("should give the current index", () => {
+				expect([...Stream.range(5).map((_, i) => i)]).ordered.members([0, 1, 2, 3, 4]);
+			});
+
+			it("should not increment the current index for filtered out entries", () => {
+				expect([...Stream.range(5).filter(v => v % 2).map((_, i) => i)]).ordered.members([0, 1]);
 			});
 		});
 

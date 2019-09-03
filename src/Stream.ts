@@ -43,7 +43,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Note: The only difference between this method and `filter2` is the type argument: This method excludes the type argument,
 	 * while the other returns it.
 	 */
-	filter<R extends T> (filter?: (val: T) => val is R): Stream<R>;
+	filter<R extends T> (filter?: (val: T, index: number) => val is R): Stream<R>;
 	/**
 	 * Returns a Stream that will loop only over the entries that match the given filter
 	 * @param filter A function that returns a truthy value if the entry should be included and a falsey value if it shouldn't
@@ -51,7 +51,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Note: The only difference between this method and `filter2` is the type argument: This method excludes the type argument,
 	 * while the other returns it.
 	 */
-	filter<X = never> (filter?: (val: T) => any): Stream<Exclude<T, X>>;
+	filter<X = never> (filter?: (val: T, index: number) => any): Stream<Exclude<T, X>>;
 
 	/**
 	 * Returns a Stream that will loop only over the entries that match the given filter
@@ -60,13 +60,13 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Note: The only difference between this method and `filter` is the type argument: This method returns the type argument,
 	 * while the other excludes it.
 	 */
-	filter2<X = T> (filter?: (val: T) => any): Stream<X>;
+	filter2<X = T> (filter?: (val: T, index: number) => any): Stream<X>;
 
 	/**
 	 * Returns a Stream of type X, using the given mapper function
 	 * @param mapper A function that maps an entry of type T to its corresponding type X
 	 */
-	map<X = T> (mapper?: (val: T) => X): Stream<X>;
+	map<X = T> (mapper?: (val: T, index: number) => X): Stream<X>;
 
 	/**
 	 * Returns a new Stream iterating over each value of the current iterator, first run through the given mapper function.
@@ -658,8 +658,8 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 }
 
 type Action<T> =
-	["filter", (val: T) => unknown] |
-	["map", (val: T) => any] |
+	["filter", (val: T, index: number) => unknown, number] |
+	["map", (val: T, index: number) => any, number] |
 	["take", number] |
 	["takeWhile", (val: T) => unknown] |
 	["takeUntil", (val: T) => unknown] |
@@ -717,28 +717,30 @@ class StreamImplementation<T> implements Stream<T> {
 	// Manipulation
 	//
 
-	public filter (filter?: (val: T) => any): any {
+	public filter (filter?: (val: T, index: number) => any): any {
 		if (!filter) return this;
 
+		const action = tuple("filter" as const, filter, 0);
 		if (this.savedNext.length) {
-			if (!filter(this.savedNext[0])) {
+			if (!filter(this.savedNext[0], action[2]++)) {
 				this.savedNext.pop();
 			}
 		}
 
-		return this.getWithAction(["filter", filter]);
+		return this.getWithAction(action);
 	}
 
-	public filter2 (filter?: (val: T) => any) {
+	public filter2 (filter?: (val: T, index: number) => any) {
 		return this.filter(filter);
 	}
 
-	public map (mapper?: (val: T) => any): Stream<any> {
+	public map (mapper?: (val: T, index: number) => any): Stream<any> {
 		if (!mapper) return this;
 
-		const mappedStream = this.getWithAction(["map", mapper]);
+		const action = tuple("map" as const, mapper, 0);
+		const mappedStream = this.getWithAction(action);
 		if (mappedStream.savedNext.length)
-			mappedStream.savedNext[0] = mapper(this.savedNext[0]);
+			mappedStream.savedNext[0] = mapper(this.savedNext[0], action[2]++);
 
 		return mappedStream;
 	}
@@ -1414,7 +1416,7 @@ class StreamImplementation<T> implements Stream<T> {
 					switch (action[0]) {
 						case "filter": {
 							const filter = action[1];
-							if (!filter(this.value)) {
+							if (!filter(this.value, action[2]++)) {
 								continue FindNext;
 							}
 
@@ -1422,7 +1424,7 @@ class StreamImplementation<T> implements Stream<T> {
 						}
 						case "map": {
 							const mapper = action[1];
-							this.value = mapper(this.value);
+							this.value = mapper(this.value, action[2]++);
 							break;
 						}
 						case "take": {
