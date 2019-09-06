@@ -21,7 +21,7 @@ Task.create("mocha", Pipe.create("tests/**/*.ts", { read: false })
 //
 
 const compileCommonJS = async () => new TypescriptWatch("src", "build").once();
-const compileAMD = async () => new TypescriptWatch("src", "build/amd", "--module AMD --traceResolution").once();
+const compileAMD = async () => new TypescriptWatch("src", "build/amd", "--module AMD").once();
 
 new Task("compile-test", initBuildFolder)
 	.then("compile", compileCommonJS, compileAMD)
