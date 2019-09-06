@@ -10,7 +10,7 @@ export default class TypescriptWatch {
 	private readonly outDir: string;
 	private declaration: string | undefined;
 
-	public constructor (dir: string, outDir: string) {
+	public constructor (dir: string, outDir: string, private args = "") {
 		this.inDir = path.resolve(dir);
 		this.outDir = path.resolve(outDir);
 	}
@@ -34,7 +34,7 @@ export default class TypescriptWatch {
 		const ocwd = process.cwd();
 		process.chdir(this.inDir);
 		const declaration = this.declaration ? `--declaration --declarationDir ${this.declaration}` : "";
-		const task = exec(`npx tsc --outDir ${this.outDir} --pretty ${declaration}`);
+		const task = exec(`npx tsc --outDir ${this.outDir} --pretty ${declaration} ${this.args}`);
 		process.chdir(ocwd);
 
 		task.stderr!.on("data", data => process.stderr.write(data));
@@ -56,7 +56,7 @@ export default class TypescriptWatch {
 		const ocwd = process.cwd();
 		process.chdir(this.inDir);
 		const declaration = this.declaration ? `--declaration --declarationDir ${this.declaration}` : "";
-		const task = exec(`npx tsc --outDir ${this.outDir} --pretty --watch ${declaration}`);
+		const task = exec(`npx tsc --outDir ${this.outDir} --pretty --watch ${declaration} ${this.args}`);
 		process.chdir(ocwd);
 
 		task.stderr!.on("data", data => process.stderr.write(data));
@@ -76,7 +76,7 @@ export default class TypescriptWatch {
 					this.initialized();
 					this.initialized = true;
 
-				} else {
+				} else if (this.onCompleteHandler) {
 					this.onCompleteHandler(() => { });
 				}
 			}

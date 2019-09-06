@@ -17,8 +17,10 @@
         "noUnusedParameters": false,
         "strictPropertyInitialization": false,
         "lib": [
-            "esnext"
-        ]
+            "esnext",
+            "dom"
+        ],
+        "types": []
     },
     "include": [
         "**/*.ts"
