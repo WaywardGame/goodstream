@@ -5,6 +5,10 @@
 	"license": "MIT",
 	"main": "Stream.js",
 	"types": "./Stream.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/WaywardGame/goodstream"
+	},
 	"devDependencies": {
 		"@types/chai-as-promised": "7.1.2",
 		"@types/chai": "4.2.0",
