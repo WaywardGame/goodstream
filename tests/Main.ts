@@ -286,6 +286,21 @@ describe("Stream", () => {
 			});
 		});
 
+		describe("'filterNullish'", () => {
+			it("should only include values that aren't null or undefined", () => {
+				expect([...Stream.of(0, "", null, undefined, true, false).filterNullish()]).ordered.members([0, "", true, false]);
+			});
+		});
+
+		describe("'filterFalsey'", () => {
+			it("should by default filter out `null`, `undefined`, and `false`", () => {
+				expect([...Stream.of(0, "", null, undefined, true, false).filterFalsey()]).ordered.members([0, "", true]);
+			});
+			it("should be able to filter out *everything* falsey", () => {
+				expect([...Stream.of(0, "", null, undefined, true, false).filterFalsey(true)]).ordered.members([true]);
+			});
+		});
+
 		describe("'map'", () => {
 			it("should replace values with a mapped version", () => {
 				expect([...Stream.range(3).map(v => v * 2)]).ordered.members([0, 2, 4]);

@@ -5,6 +5,8 @@ import { PROTOTYPES_ITERABLE_ITERATOR } from "../../util/Prototypes";
 interface StreamMethods<T> {
 	filter: Stream<T>["filter"];
 	filter2: Stream<T>["filter2"];
+	filterNullish: Stream<T>["filterNullish"];
+	filterFalsey: Stream<T>["filterFalsey"];
 	map: Stream<T>["map"];
 	flatMap: Stream<T>["flatMap"];
 	take: Stream<T>["take"];
@@ -75,6 +77,8 @@ declare global {
 const methods: Extract<keyof IterableIterator<any>, keyof Stream<any>>[] = [
 	"filter",
 	"filter2",
+	"filterNullish",
+	"filterFalsey",
 	"map",
 	"flatMap",
 	"take",

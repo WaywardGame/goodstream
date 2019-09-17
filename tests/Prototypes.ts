@@ -68,6 +68,21 @@ describe("apply", () => {
 				expect(stream.toArray()).ordered.members([1, 2, 3, 4, 5]);
 			});
 		});
+
+		describe("'filterNullish'", () => {
+			it("should only include values that aren't null or undefined", () => {
+				expect([0, "", null, undefined, true, false].filterNullish()).ordered.members([0, "", true, false]);
+			});
+		});
+
+		describe("'filterFalsey'", () => {
+			it("should by default filter out `null`, `undefined`, and `false`", () => {
+				expect([0, "", null, undefined, true, false].filterFalsey()).ordered.members([0, "", true]);
+			});
+			it("should be able to filter out *everything* falsey", () => {
+				expect([0, "", null, undefined, true, false].filterFalsey(true)).ordered.members([true]);
+			});
+		});
 	});
 
 	describe("function", () => {

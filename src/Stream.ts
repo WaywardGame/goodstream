@@ -63,6 +63,20 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	filter2<X = T> (filter?: (val: T, index: number) => any): Stream<X>;
 
 	/**
+	 * Remove `undefined` values from the stream
+	 */
+	filterNullish (): Stream<Exclude<T, undefined>>;
+
+	/**
+	 * Remove all falsey values from the stream (does not filter out `0` and `""`)
+	 */
+	filterFalsey (): Stream<Exclude<T, undefined | null | false>>;
+	/**
+	 * Remove all falsey values from the stream, including `0` and `""`
+	 */
+	filterFalsey (removeZeroAndEmptyString: true): Stream<Exclude<T, undefined | null | false | 0 | "">>;
+
+	/**
 	 * Returns a Stream of type X, using the given mapper function
 	 * @param mapper A function that maps an entry of type T to its corresponding type X
 	 */
@@ -732,6 +746,14 @@ class StreamImplementation<T> implements Stream<T> {
 
 	public filter2 (filter?: (val: T, index: number) => any) {
 		return this.filter(filter);
+	}
+
+	public filterNullish () {
+		return this.filter(value => value !== undefined && value !== null);
+	}
+
+	public filterFalsey (removeZeroAndEmptyString = false) {
+		return this.filter((value: unknown) => removeZeroAndEmptyString ? value : value !== undefined && value !== null && value !== false);
 	}
 
 	public map (mapper?: (val: T, index: number) => any): Stream<any> {
