@@ -18,7 +18,7 @@ declare global {
 
 	interface ReadonlyArray<T> {
 		/**
-		 * Remove `undefined` values from an array
+		 * Remove `undefined` and `null` values from an array
 		 */
 		filterNullish (): Exclude<T, undefined>[];
 		/**

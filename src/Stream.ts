@@ -63,7 +63,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	filter2<X = T> (filter?: (val: T, index: number) => any): Stream<X>;
 
 	/**
-	 * Remove `undefined` values from the stream
+	 * Remove `undefined` and `null` values from the stream
 	 */
 	filterNullish (): Stream<Exclude<T, undefined>>;
 
