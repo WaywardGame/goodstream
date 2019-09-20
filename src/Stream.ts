@@ -508,7 +508,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 *
 	 * Note: Alias of `Stream.from(Promise.all(stream.toArray()))`
 	 */
-	rest (): Promise<T extends Promise<infer R> ? Stream<R> : never>;
+	rest (): Promise<T extends Promise<infer R> ? Stream<R> : never> & { isResolved?: true };
 
 	/**
 	 * Collects the items in this Stream to an array.
@@ -1195,8 +1195,16 @@ class StreamImplementation<T> implements Stream<T> {
 		return Promise.race(this.toArray()) as any;
 	}
 
-	public async rest (): Promise<any> {
-		return new StreamImplementation((await Promise.all(this.toArray()))[Symbol.iterator]()) as any;
+	public rest (): any {
+		const arr = this.toArray();
+		const promise: any = arr.length === 0 ? Promise.resolve(Stream.empty()) : Promise.all(arr)
+			.then(results => new StreamImplementation(results[Symbol.iterator]()));
+
+		if (arr.length === 0) {
+			promise.isResolved = true;
+		}
+
+		return promise;
 	}
 
 	public toArray (): T[];

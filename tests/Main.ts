@@ -1011,6 +1011,9 @@ describe("Stream", () => {
 		describe("'rest'", () => {
 			it("should return a new stream with all values awaited", () => {
 				return Promise.all([
+					expect(Stream.of().rest()).property("isResolved", true),
+					expect(Stream.of().rest()).eventually.instanceOf(Stream),
+					expect(Stream.of(1).rest()).not.key("isResolved"),
 					expect(Stream.of(sleep(100, 0), sleep(200, 1), sleep(300, 2)).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
 					expect(Stream.of(sleep(1000, 0), sleep(200, 1), sleep(300, 2)).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
 					expect(Stream.of(sleep(1000, 0), sleep(100, 1), sleep(3, 2)).rest().then(s => [...s])).eventually.ordered.members([0, 1, 2]),
