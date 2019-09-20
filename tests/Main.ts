@@ -500,6 +500,11 @@ describe("Stream", () => {
 			it("should sort the entries in the stream with a custom comparator", () => {
 				expect([...Stream.range(50).sorted((a, b) => a - b)]).ordered.members([...Stream.range(50)].sort((a, b) => a - b));
 			});
+
+			it("should return the same stream when passed `false`", () => {
+				const stream = Stream.range(50);
+				expect(stream.sorted(false)).eq(stream);
+			});
 		});
 
 		describe("'reverse'", () => {

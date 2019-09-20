@@ -156,7 +156,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Returns a new Stream which contains the sorted contents of this Stream.
 	 * @param comparator A function that returns a "difference" between `a` and `b`, for sorting by.
 	 */
-	sorted (comparator: (a: T, b: T) => number): Stream<T>;
+	sorted (comparator: ((a: T, b: T) => number) | false): Stream<T>;
 
 	/**
 	 * Returns a new Stream which contains the contents of this Stream, in reverse order.
@@ -868,7 +868,8 @@ class StreamImplementation<T> implements Stream<T> {
 		return this.getWithAction(["step", current, step]);
 	}
 
-	public sorted (comparator?: (a: T, b: T) => number) {
+	public sorted (comparator?: ((a: T, b: T) => number) | false) {
+		if (comparator === false) return this;
 		return new StreamImplementation(this.toArray().sort(comparator)[Symbol.iterator]());
 	}
 
