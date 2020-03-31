@@ -553,7 +553,9 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	/**
 	 * Constructs a Map instance from the key-value pairs in this Stream.
 	 */
-	toMap (): T extends [infer K, infer V] ? Map<K, V> : never;
+	toMap ():
+		T extends [infer K, infer V] ? Map<K, V> :
+		T extends readonly [infer K2, infer V2] ? Map<K2, V2> : never;
 	/**
 	 * Puts the key-value pairs in this Stream into the given Map.
 	 */
@@ -562,23 +564,25 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * Constructs a Map instance from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toMap<K, V> (mapper: (value: T, index: number) => [K, V]): Map<K, V>;
+	toMap<K, V> (mapper: (value: T, index: number) => [K, V] | readonly [K, V]): Map<K, V>;
 	/**
 	 * Puts the key-value pairs in this Stream into the given Map, using a mapping function.
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toMap<KE, VE, KM extends KE, VM extends VE> (map: Map<KE, VE>, mapper: (value: T, index: number) => [KM, VM]): Map<KE, VE>;
+	toMap<KE, VE, KM extends KE, VM extends VE> (map: Map<KE, VE>, mapper: (value: T, index: number) => [KM, VM] | readonly [KM, VM]): Map<KE, VE>;
 
 	/**
 	 * Constructs an object from the key-value pairs in this Stream.
 	 */
-	toObject (): T extends [infer K, infer V] ? { [key in Extract<K, string | number | symbol>]: V } : never;
+	toObject ():
+		T extends [infer K, infer V] ? { [key in Extract<K, string | number | symbol>]: V } :
+		T extends readonly [infer K2, infer V2] ? { [key in Extract<K2, string | number | symbol>]: V2 } : never;
 	/**
 	 * Constructs an object from the items in this Stream, using a mapping function.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toObject<K extends string | number | symbol, V> (mapper: (value: T, index: number) => [K, V]): { [key in K]: V };
+	toObject<K extends string | number | symbol, V> (mapper: (value: T, index: number) => [K, V] | readonly [K, V]): { [key in K]: V };
 	/**
 	 * Puts the key-value pairs in this Stream into the given object.
 	 */
@@ -588,7 +592,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * @param map The map to put key-value pairs into.
 	 * @param mapper A mapping function which takes an item in this Stream and returns a key-value pair.
 	 */
-	toObject<E, KM extends keyof E, VM extends E[keyof E]> (obj: E, mapper: (value: T, index: number) => [KM, VM]): E;
+	toObject<E, KM extends keyof E, VM extends E[keyof E]> (obj: E, mapper: (value: T, index: number) => [KM, VM] | readonly [KM, VM]): E;
 
 	/**
 	 * Combines the items in this Stream into a string.
@@ -1250,7 +1254,7 @@ class StreamImplementation<T> implements Stream<T> {
 		}
 	}
 
-	public toMap (result?: Map<any, any> | ((value: any, index: number) => [any, any]), mapper?: (value: any, index: number) => [any, any]): any {
+	public toMap (result?: Map<any, any> | ((value: any, index: number) => [any, any] | readonly [any, any]), mapper?: (value: any, index: number) => [any, any] | readonly [any, any]): any {
 		if (typeof result === "function") {
 			mapper = result;
 			result = new Map();
@@ -1267,7 +1271,7 @@ class StreamImplementation<T> implements Stream<T> {
 			}
 
 			if (mapper) {
-				result.set(...mapper(this.value, index++));
+				result.set(...mapper(this.value, index++) as [any, any]);
 
 			} else {
 				if (!Array.isArray(this.value)) {
@@ -1279,7 +1283,7 @@ class StreamImplementation<T> implements Stream<T> {
 		}
 	}
 
-	public toObject (result?: any | ((value: any, index: number) => [any, any]), mapper?: (value: any, index: number) => [any, any]) {
+	public toObject (result?: any | ((value: any, index: number) => [any, any]), mapper?: (value: any, index: number) => [any, any] | readonly [any, any]) {
 		if (typeof result === "function") {
 			mapper = result;
 			result = {};

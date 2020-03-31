@@ -205,6 +205,37 @@ describe("apply", () => {
 				expect(map.get("test")).eq("banana");
 			});
 		});
+
+		describe("retainWhere", () => {
+			describe("without key param", () => {
+				it("should retain the entries from this map where the given predicate returns true", () => {
+					const map = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]);
+					expect(map.retainWhere(v => v % 2)).true;
+					expect(Array.from(map)).deep.members([[1, 1], [5, 3], [25, 5]]);
+					expect(map.retainWhere((v, k) => typeof k === "number")).true;
+					expect(Array.from(map)).deep.members([[1, 1], [5, 3], [25, 5]]);
+					expect(map.retainWhere(v => typeof v === "string")).false;
+					expect(Array.from(map)).deep.members([]);
+				});
+			});
+
+			describe("with key param", () => {
+				it("should retain the entries from this map where the given predicate returns true", () => {
+					let map = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]);
+					expect(map.retainWhere(1, v => v % 2)).true;
+					expect(Array.from(map)).deep.members([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]);
+					expect(map.retainWhere(3, v => v % 2)).true;
+					expect(Array.from(map)).deep.members([[1, 1], [5, 3], [235, 4], [25, 5]]);
+					expect(map.retainWhere(5, (v, k) => typeof k === "number")).true;
+					expect(Array.from(map)).deep.members([[1, 1], [5, 3], [235, 4], [25, 5]]);
+					expect(map.retainWhere(235, v => typeof v === "string")).true;
+					expect(Array.from(map)).deep.members([[1, 1], [5, 3], [25, 5]]);
+					map = new Map([[1, 2]]);
+					expect(map.retainWhere(1, v => false)).false;
+					expect(Array.from(map)).deep.members([]);
+				});
+			});
+		});
 	});
 
 	describe("regex", () => {
@@ -276,6 +307,34 @@ describe("apply", () => {
 				expect(Array.from(set)).members([2, 4]);
 				expect(set.deleteWhere(v => false)).false;
 				expect(Array.from(set)).members([2, 4]);
+			});
+		});
+
+		describe("retainWhere", () => {
+			it("should retain the values from this set where the given predicate returns true", () => {
+				const set = new Set([1, 2, 3, 4, 5]);
+				expect(set.retainWhere(v => v % 2)).true;
+				expect(Array.from(set)).members([1, 3, 5]);
+				expect(set.retainWhere(v => typeof v === "number")).true;
+				expect(Array.from(set)).members([1, 3, 5]);
+				expect(set.retainWhere(v => typeof v === "string")).false;
+				expect(Array.from(set)).members([]);
+			});
+		});
+
+		describe("retainNot", () => {
+			it("should delete the given value, and return whether there's any value left", () => {
+				const set = new Set([1, 2, 3, 4, 5]);
+				expect(set.retainNot(1)).true;
+				expect(Array.from(set)).members([2, 3, 4, 5]);
+				expect(set.retainNot(1)).true;
+				expect(Array.from(set)).members([2, 3, 4, 5]);
+				expect(set.retainNot(2)).true;
+				expect(set.retainNot(3)).true;
+				expect(set.retainNot(4)).true;
+				expect(set.retainNot(5)).false;
+				expect(set.retainNot(5)).false;
+				expect(Array.from(set)).members([]);
 			});
 		});
 
