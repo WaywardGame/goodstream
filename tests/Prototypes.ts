@@ -150,6 +150,16 @@ describe("apply", () => {
 	});
 
 	describe("map", () => {
+
+		describe("toggle", () => {
+			it("should toggle the given entries to/from this map", () => {
+				const map = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]);
+				expect(Array.from(map.toggle(false, 2, 4))).deep.members([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]);
+				expect(Array.from(map.toggle(false, 3, 4))).deep.members([[1, 1], [5, 3], [235, 4], [25, 5]]);
+				expect(Array.from(map.toggle(true, 1, 4))).deep.members([[1, 4], [5, 3], [235, 4], [25, 5]]);
+			});
+		});
+
 		describe("entryStream", () => {
 			it("should return a stream from the entries in the map", () => {
 				const stream = new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]).entryStream();
