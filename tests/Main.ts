@@ -27,15 +27,17 @@ describe("Stream", () => {
 
 		it("'forEach'", () => {
 			const arr: [string, number][] = [];
-			Stream.range(3).map(val => `val${val}`).forEach((value, index) => arr.push([value, index]));
+			const count = Stream.range(3).map(val => `val${val}`).forEach((value, index) => arr.push([value, index]));
 			expect(arr).deep.ordered.members([["val0", 0], ["val1", 1], ["val2", 2]]);
+			expect(count).eq(3);
 		});
 
 		describe("'splatEach'", () => {
 			it("should execute a callback for each iterable member of this stream, splatting all values into the call", () => {
 				const arr: number[][] = [];
-				Stream.range(3).map(() => Stream.range(3)).splatEach((...numbers) => arr.push(numbers));
-				expect(arr).deep.ordered.members([[0, 1, 2], [0, 1, 2], [0, 1, 2]]);
+				const count = Stream.range(4).map(() => Stream.range(3)).splatEach((...numbers) => arr.push(numbers));
+				expect(arr).deep.ordered.members([[0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2]]);
+				expect(count).eq(4);
 			});
 		});
 

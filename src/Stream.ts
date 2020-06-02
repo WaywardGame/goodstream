@@ -659,13 +659,15 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	/**
 	 * Runs a function on each item in this Stream.
 	 * @param user The function to call for each item
+	 * @returns The number of items that were looped through.
 	 */
-	forEach (user: (val: T, index: number) => any): void;
+	forEach (user: (val: T, index: number) => any): number;
 	/**
 	 * Runs a function on each item in this Stream.
 	 * @param user The function to call for each item
+	 * @returns The number of items that were looped through.
 	 */
-	splatEach (user: T extends any[] ? ((...args: T) => any) : T extends Iterable<infer V> ? ((...args: V[]) => any) : never): void;
+	splatEach (user: T extends any[] ? ((...args: T) => any) : T extends Iterable<infer V> ? ((...args: V[]) => any) : never): number;
 
 	next (): IteratorResult<T>;
 
@@ -1361,7 +1363,7 @@ class StreamImplementation<T> implements Stream<T> {
 		while (true) {
 			this.next();
 			if (this.done) {
-				return;
+				return index;
 			}
 
 			user(this.value, index++);
@@ -1369,10 +1371,11 @@ class StreamImplementation<T> implements Stream<T> {
 	}
 
 	public splatEach (user?: (...args: any[]) => any) {
+		let index = 0;
 		while (true) {
 			this.next();
 			if (this.done) {
-				return;
+				return index;
 			}
 
 			const value = this.value;
@@ -1380,6 +1383,7 @@ class StreamImplementation<T> implements Stream<T> {
 				throw new Error(`This stream contains a non-iterable value (${value}), it can't be splatted into the user function.`);
 			}
 
+			index++;
 			user!(...value as any);
 		}
 	}
