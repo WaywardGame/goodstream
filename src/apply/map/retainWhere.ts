@@ -25,7 +25,7 @@ Define(Map.prototype, "retainWhere", function (retainKey, predicate) {
 			if (!predicate(value, key))
 				this.delete(key);
 
-	} else {
+	} else if (this.has(retainKey)) {
 		const value = this.get(retainKey);
 		if (!predicate(value, retainKey))
 			this.delete(retainKey);

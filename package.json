@@ -1,7 +1,7 @@
 {
 	"name": "@wayward/goodstream",
 	"description": "Value streaming made as convenient as possible.",
-	"version": "0.6.2",
+	"version": "0.6.3",
 	"license": "MIT",
 	"main": "Stream.js",
 	"types": "./Stream.d.ts",

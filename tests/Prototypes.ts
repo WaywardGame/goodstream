@@ -244,6 +244,14 @@ describe("apply", () => {
 					expect(map.retainWhere(1, v => false)).false;
 					expect(Array.from(map)).deep.members([]);
 				});
+
+				it("should never loop over missing keys", () => {
+					const map = new Map([[1, "test"]]);
+					let result = "thing";
+					expect(() => { map.retainWhere(2, val => result = val); }).not.throw();
+					expect(result).not.eq(undefined);
+					expect(map.size).eq(1);
+				});
 			});
 		});
 	});
