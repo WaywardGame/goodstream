@@ -59,6 +59,8 @@ interface StreamMethods<T> {
 	toMap: Stream<T>["toMap"];
 	toObject: Stream<T>["toObject"];
 	toString: Stream<T>["toString"];
+	min: Stream<T>["min"];
+	max: Stream<T>["max"];
 	iterateToEnd: Stream<T>["iterateToEnd"];
 	finish: Stream<T>["finish"];
 	end: Stream<T>["end"];
@@ -131,6 +133,8 @@ const methods: Extract<keyof IterableIterator<any>, keyof Stream<any>>[] = [
 	"toMap",
 	"toObject",
 	"toString",
+	"min",
+	"max",
 	"iterateToEnd",
 	"finish",
 	"end",

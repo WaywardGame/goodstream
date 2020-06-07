@@ -1124,5 +1124,29 @@ describe("Stream", () => {
 				expect(Stream.range(3).toString((str, value) => `${value},${str}`, value => `thing${value}`)).eq("2,1,thing0");
 			});
 		});
+
+		describe("'min'", () => {
+			it("should return the smolest value in the stream", () => {
+				expect(Stream.range(3).min()).eq(0);
+				expect(Stream.range(12, 30).reverse().min()).eq(12);
+			});
+
+			it("should accept a mapper to get the actual value from the stream items", () => {
+				expect(Stream.range(3).map(value => [value]).min(([value]) => value)).deep.eq([0]);
+				expect(Stream.range(12, 30).reverse().map(value => [value]).min(([value]) => value)).deep.eq([12]);
+			});
+		});
+
+		describe("'max'", () => {
+			it("should return the lorgest value in the stream", () => {
+				expect(Stream.range(3).max()).eq(2);
+				expect(Stream.range(12, 30).reverse().max()).eq(29);
+			});
+
+			it("should accept a mapper to get the actual value from the stream items", () => {
+				expect(Stream.range(3).map(value => [value]).max(([value]) => value)).deep.eq([2]);
+				expect(Stream.range(12, 30).reverse().map(value => [value]).max(([value]) => value)).deep.eq([29]);
+			});
+		});
 	});
 });

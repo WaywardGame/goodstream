@@ -624,6 +624,25 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	toString (concatenator: (current: string, value: T) => string, firstValueMapper: (value: T) => string): string;
 
 	/**
+	 * Returns the smallest number in this stream, or `undefined` if this stream is empty.
+	 */
+	min (): T extends number ? T | undefined : never;
+	/**
+	 * Returns the item of the smallest value in this stream, or `undefined` if this stream is empty.
+	 * @param mapper Converts an item in this stream to the value for comparison.
+	 */
+	min (mapper: (value: T, index: number) => number): T | undefined;
+	/**
+	 * Returns the largest number in this stream, or `undefined` if this stream is empty.
+	 */
+	max (): T extends number ? T | undefined : never;
+	/**
+	 * Returns the item of the largest value in this stream, or `undefined` if this stream is empty.
+	 * @param mapper Converts an item in this stream to the value for comparison.
+	 */
+	max (mapper: (value: T, index: number) => number): T | undefined;
+
+	/**
 	 * Iterates through the entire stream.
 	 */
 	iterateToEnd (): void;
@@ -1337,6 +1356,46 @@ class StreamImplementation<T> implements Stream<T> {
 				else result = typeof startingValue === "function" ? startingValue(this.value)
 					: startingValue === true ? `${this.value}`
 						: concatenator(startingValue!, this.value);
+			}
+		}
+	}
+
+	public min (): T extends number ? T | undefined : never;
+	public min (mapper: (value: T, index: number) => number): T | undefined;
+	public min (mapper?: (value: T, index: number) => number) {
+		let minValue = Infinity;
+		let minItem: T | undefined;
+		let i = 0;
+		while (true) {
+			this.next();
+			if (this.done) {
+				return minItem;
+			}
+
+			const value = mapper ? mapper(this.value, i++) : this.value as any as number;
+			if (value < minValue) {
+				minValue = value;
+				minItem = this.value;
+			}
+		}
+	}
+
+	public max (): T extends number ? T | undefined : never;
+	public max (mapper: (value: T, index: number) => number): T | undefined;
+	public max (mapper?: (value: T, index: number) => number) {
+		let maxValue = -Infinity;
+		let maxItem: T | undefined;
+		let i = 0;
+		while (true) {
+			this.next();
+			if (this.done) {
+				return maxItem;
+			}
+
+			const value = mapper ? mapper(this.value, i++) : this.value as any as number;
+			if (value > maxValue) {
+				maxValue = value;
+				maxItem = this.value;
 			}
 		}
 	}
