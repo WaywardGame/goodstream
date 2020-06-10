@@ -83,6 +83,30 @@ describe("apply", () => {
 				expect([0, "", null, undefined, true, false].filterFalsey(true)).ordered.members([true]);
 			});
 		});
+
+		describe("'min'", () => {
+			it("should return the smolest value in the stream", () => {
+				expect([0, 1, 2].min()).eq(0);
+				expect([12, 13, 15, 18, 19.2, 99].reverse().min()).eq(12);
+			});
+
+			it("should accept a mapper to get the actual value from the stream items", () => {
+				expect([0, 1, 2].map(value => [value]).min(([value]) => value)).deep.eq([0]);
+				expect([12, 13, 15, 18, 19.2, 99].reverse().map(value => [value]).min(([value]) => value)).deep.eq([12]);
+			});
+		});
+
+		describe("'max'", () => {
+			it("should return the lorgest value in the stream", () => {
+				expect([0, 1, 2].max()).eq(2);
+				expect([12, 13, 15, 18, 19.2, 29].reverse().max()).eq(29);
+			});
+
+			it("should accept a mapper to get the actual value from the stream items", () => {
+				expect([0, 1, 2].map(value => [value]).max(([value]) => value)).deep.eq([2]);
+				expect([12, 13, 15, 18, 19.2, 29].reverse().map(value => [value]).max(([value]) => value)).deep.eq([29]);
+			});
+		});
 	});
 
 	describe("function", () => {
