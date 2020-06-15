@@ -2,6 +2,7 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "../build/apply";
 import Stream from "../build/Stream";
+import { tuple } from "../build/util/Arrays";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -105,6 +106,61 @@ describe("apply", () => {
 			it("should accept a mapper to get the actual value from the stream items", () => {
 				expect([0, 1, 2].map(value => [value]).max(([value]) => value)).deep.eq([2]);
 				expect([12, 13, 15, 18, 19.2, 29].reverse().map(value => [value]).max(([value]) => value)).deep.eq([29]);
+			});
+		});
+
+		describe("'toSet'", () => {
+			it("should collect all values in the array into a set", () => {
+				expect([...[0, 1, 2].toSet()]).ordered.members([0, 1, 2]);
+				expect([...["foo", "bar", "bazz"].toSet()]).ordered.members(["foo", "bar", "bazz"]);
+			});
+
+			it("should push the values into the end of an existing set", () => {
+				expect([...[0, 1, 2].toSet(new Set([8, 9]))]).ordered.members([8, 9, 0, 1, 2]);
+			});
+
+			it("should map the values before creating the set", () => {
+				expect([...[0, 1, 2].toSet(v => v + 1)]).ordered.members([1, 2, 3]);
+			});
+
+			it("should map the values before pushing values into an existing set", () => {
+				expect([...[0, 1, 2].toSet(new Set([8, 9]), v => v + 1)]).ordered.members([8, 9, 1, 2, 3]);
+			});
+		});
+
+		describe("'toMap'", () => {
+			it("should collect all values in the array into a map", () => {
+				expect([...[tuple("bar", 8), tuple("foo", 9), tuple("test", 1)].toMap()]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should push the values into the end of an existing map", () => {
+				expect([...[tuple("test", 1)].toMap(new Map([["bar", 8], ["foo", 9]]))]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should map the values before creating the map", () => {
+				expect([...[0, 1, 2].toMap(v => [`${v}key`, v + 1])]).deep.ordered.members([["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+
+			it("should map the values before pushing values into an existing map", () => {
+				expect([...[0, 1, 2].toMap(new Map([["bar", 8], ["foo", 9]]), v => [`${v}key`, v + 1])]).deep.ordered.members([["bar", 8], ["foo", 9], ["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+		});
+
+		describe("'toObject'", () => {
+			it("should collect all values in the array into a object", () => {
+				expect([...Object.entries([tuple("bar", 8), tuple("foo", 9), tuple("test", 1)].toObject())]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should push the values into the end of an existing object", () => {
+				expect([...Object.entries([tuple("test", 1)].toObject({ bar: 8, foo: 9 }))]).deep.ordered.members([["bar", 8], ["foo", 9], ["test", 1]]);
+			});
+
+			it("should map the values before creating the object", () => {
+				expect([...Object.entries([0, 1, 2].toObject(v => [`${v}key`, v + 1]))]).deep.ordered.members([["0key", 1], ["1key", 2], ["2key", 3]]);
+			});
+
+			it("should map the values before pushing values into an existing object", () => {
+				expect([...Object.entries([0, 1, 2].toObject({ bar: 8, foo: 9 }, v => [`${v}key` as "bar", v + 1]))]).deep.ordered.members([["bar", 8], ["foo", 9], ["0key", 1], ["1key", 2], ["2key", 3]]);
 			});
 		});
 	});
