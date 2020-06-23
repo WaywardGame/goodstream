@@ -366,6 +366,10 @@ describe("Stream", () => {
 				expect([...Stream.range(5).take(3)]).ordered.members([0, 1, 2]);
 			});
 
+			it("should do nothing when taking Infinity", () => {
+				expect([...Stream.range(5).take(Infinity)]).ordered.members([0, 1, 2, 3, 4]);
+			});
+
 			it("should error when given a negative number", () => {
 				expect(() => Stream.range(5).take(-3)).throw();
 			});
@@ -428,6 +432,10 @@ describe("Stream", () => {
 		describe("'drop'", () => {
 			it("should skip the number of items requested", () => {
 				expect([...Stream.range(5).drop(3)]).ordered.members([3, 4]);
+			});
+
+			it("should return an empty stream when dropping Infinity", () => {
+				expect([...Stream.range(5).drop(Infinity)]).ordered.members([]);
 			});
 
 			it("should error when given a negative number", () => {

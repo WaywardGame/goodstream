@@ -757,7 +757,8 @@ class StreamImplementation<T> implements Stream<T> {
 	//
 
 	public filter (filter?: (val: T, index: number) => any): any {
-		if (!filter) return this;
+		if (!filter)
+			return this;
 
 		const action = tuple("filter" as const, filter, 0);
 		if (this.savedNext.length) {
@@ -782,7 +783,8 @@ class StreamImplementation<T> implements Stream<T> {
 	}
 
 	public map (mapper?: (val: T, index: number) => any): Stream<any> {
-		if (!mapper) return this;
+		if (!mapper)
+			return this;
 
 		const action = tuple("map" as const, mapper, 0);
 		const mappedStream = this.getWithAction(action);
@@ -797,6 +799,9 @@ class StreamImplementation<T> implements Stream<T> {
 	}
 
 	public take (amount: number) {
+		if (amount === Infinity)
+			return this;
+
 		if (amount < 0 || !Number.isInteger(amount))
 			throw new Error("Number of items to take must be a positive integer.");
 
@@ -833,10 +838,14 @@ class StreamImplementation<T> implements Stream<T> {
 	}
 
 	public drop (amount: number) {
+		if (amount === Infinity)
+			return Stream.empty();
+
 		if (amount < 0 || !Number.isInteger(amount))
 			throw new Error("Number of items to take must be a positive integer.");
 
-		if (amount === 0) return this;
+		if (amount === 0)
+			return this;
 
 		if (this.savedNext.length) {
 			amount--;
