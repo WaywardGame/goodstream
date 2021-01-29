@@ -149,14 +149,25 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	step (step: number): Stream<T>;
 
 	/**
-	 * Returns a new Stream which contains the sorted contents of this stream. The values are sorted in ascending ASCII order.
+	 * Returns a new Stream which contains the sorted contents of this stream. Uses the same sort algorithm as native arrays.
 	 */
-	sorted (): Stream<T>;
+	sort (): Stream<T>;
 	/**
 	 * Returns a new Stream which contains the sorted contents of this Stream.
 	 * @param comparator A function that returns a "difference" between `a` and `b`, for sorting by.
 	 */
-	sorted (comparator: ((a: T, b: T) => number) | false): Stream<T>;
+	sort (comparator: ((a: T, b: T) => number) | false): Stream<T>;
+
+	/**
+	 * Returns a new Stream which contains the sorted contents of this stream. Uses the same sort algorithm as native arrays over the value returned by `mapper`.
+	 * @param mapper The stream will be sorted as if these values are the stream values. The mapper will only be called once for each stream value.
+	 */
+	sortBy (mapper: (value: T) => any): Stream<T>;
+	/**
+	 * Returns a new Stream which contains the sorted contents of this stream. Uses the same sort algorithm as native arrays over the value returned by `mapper`.
+	 * @param mapper The stream will be sorted as if these values are the stream values. The mapper will only be called once for each stream value.
+	 */
+	sortBy<M> (mapper: (value: T) => M, comparator: ((value1: M, value2: M) => number) | false): Stream<T>;
 
 	/**
 	 * Returns a new Stream which contains the contents of this Stream, in reverse order.
@@ -902,9 +913,17 @@ class StreamImplementation<T> implements Stream<T> {
 		return this.getWithAction(["step", current, step]);
 	}
 
-	public sorted (comparator?: ((a: T, b: T) => number) | false) {
+	public sort (comparator?: ((a: T, b: T) => number) | false) {
 		if (comparator === false) return this;
 		return new StreamImplementation(this.toArray().sort(comparator)[Symbol.iterator]());
+	}
+
+	public sortBy (mapper: (value: T) => any, comparator?: ((a: any, b: any) => number) | false) {
+		if (comparator === false) return this;
+		const realComparator = comparator ? (([, a]: any[], [, b]: any[]) => comparator!(a, b))
+			: (([, a]: any[], [, b]: any[]) => a - b);
+		return new StreamImplementation(this.toArray(value => [value, mapper(value)]).sort(realComparator)[Symbol.iterator]())
+			.map(([value]) => value);
 	}
 
 	public reverse () {

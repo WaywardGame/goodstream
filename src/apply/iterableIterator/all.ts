@@ -16,7 +16,8 @@ interface StreamMethods<T> {
 	dropWhile: Stream<T>["dropWhile"];
 	dropUntil: Stream<T>["dropUntil"];
 	step: Stream<T>["step"];
-	sorted: Stream<T>["sorted"];
+	sort: Stream<T>["sort"];
+	sortBy: Stream<T>["sort"];
 	reverse: Stream<T>["reverse"];
 	distinct: Stream<T>["distinct"];
 	shuffle: Stream<T>["shuffle"];
@@ -90,7 +91,8 @@ const methods: Extract<keyof IterableIterator<any>, keyof Stream<any>>[] = [
 	"dropWhile",
 	"dropUntil",
 	"step",
-	"sorted",
+	"sort",
+	"sortBy",
 	"reverse",
 	"distinct",
 	"shuffle",

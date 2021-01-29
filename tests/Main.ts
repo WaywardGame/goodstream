@@ -502,18 +502,35 @@ describe("Stream", () => {
 			});
 		});
 
-		describe("'sorted'", () => {
+		describe("'sort'", () => {
 			it("should sort the entries in the stream", () => {
-				expect([...Stream.range(50).sorted()]).ordered.members([...Stream.range(50)].sort());
+				expect([...Stream.range(50).sort()]).ordered.members([...Stream.range(50)].sort());
 			});
 
 			it("should sort the entries in the stream with a custom comparator", () => {
-				expect([...Stream.range(50).sorted((a, b) => a - b)]).ordered.members([...Stream.range(50)].sort((a, b) => a - b));
+				expect([...Stream.range(50).sort((a, b) => a - b)]).ordered.members([...Stream.range(50)].sort((a, b) => a - b));
 			});
 
 			it("should return the same stream when passed `false`", () => {
 				const stream = Stream.range(50);
-				expect(stream.sorted(false)).eq(stream);
+				expect(stream.sort(false)).eq(stream);
+			});
+		});
+
+		describe("'sortBy'", () => {
+			it("should sort the entries in the stream by the mapped value", () => {
+				expect([...Stream.of("seventy", "twelve", "four", "thirteen", "one", "three").sortBy(word => word.length)])
+					.ordered.members(["one", "four", "three", "twelve", "seventy", "thirteen"]);
+			});
+
+			it("should sort the entries in the stream with a custom comparator by a mapped value", () => {
+				expect([...Stream.of("seventy", "twelve", "four", "thirteen", "one", "three").sortBy(word => word.length, (a, b) => b - a)])
+					.ordered.members(["thirteen", "seventy", "twelve", "three", "four", "one"]);
+			});
+
+			it("should return the same stream when passed `false`", () => {
+				const stream = Stream.range(50);
+				expect(stream.sortBy(v => v % 2, false)).eq(stream);
 			});
 		});
 
