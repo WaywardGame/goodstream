@@ -93,7 +93,7 @@ interface Stream<T> extends Iterator<T>, Iterable<T> {
 	 * // result: [2, 3, 4, 5, 6, 7]
 	 * ```
 	 */
-	flatMap<X> (mapper: (value: T) => Iterable<X>): Stream<X>;
+	flatMap<X> (mapper: (value: T, index: number) => Iterable<X>): Stream<X>;
 	/**
 	 * Returns a new Stream iterating over every value of each value of this iterator. The values in this
 	 * Stream must be iterable.
@@ -805,7 +805,7 @@ class StreamImplementation<T> implements Stream<T> {
 		return mappedStream;
 	}
 
-	public flatMap (mapper?: (value: T) => Iterable<any>) {
+	public flatMap (mapper?: (value: T, i: number) => Iterable<any>) {
 		return new StreamImplementation(new FlatMapStream(this, mapper)) as any;
 	}
 

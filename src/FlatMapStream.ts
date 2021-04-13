@@ -3,8 +3,9 @@ export default class FlatMapStream<T, R> implements Iterator<R> {
 	public done = false;
 
 	private subIterable: Iterator<any> | undefined;
+	private index = 0;
 
-	public constructor (private readonly stream: Iterator<T>, private readonly mapper?: (value: T) => Iterable<R>) { }
+	public constructor (private readonly stream: Iterator<T>, private readonly mapper?: (value: T, index: number) => Iterable<R>) { }
 
 	public next () {
 		while (true) {
@@ -17,7 +18,7 @@ export default class FlatMapStream<T, R> implements Iterator<R> {
 
 				let nextPotentialSubiterable: any = nextIterable;
 				if (this.mapper) {
-					nextPotentialSubiterable = this.mapper(nextIterable);
+					nextPotentialSubiterable = this.mapper(nextIterable, this.index++);
 				}
 
 				if (typeof nextPotentialSubiterable !== "object" || !(Symbol.iterator in nextPotentialSubiterable)) {

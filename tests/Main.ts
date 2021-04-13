@@ -351,6 +351,14 @@ describe("Stream", () => {
 				expect([...Stream.of("foo", "bar").flatMap(str => str)]).ordered.members(["foo", "bar"]);
 			});
 
+			it("should give the current index", () => {
+				expect([...Stream.range(5).flatMap((_, i) => [i])]).ordered.members([0, 1, 2, 3, 4]);
+			});
+
+			it("should not increment the current index for filtered out entries", () => {
+				expect([...Stream.range(5).filter(v => v % 2).flatMap((_, i) => [i])]).ordered.members([0, 1]);
+			});
+
 			it("should not replace values in the current stream", () => {
 				const stream = Stream.of([0, 0], [1, 2], [2, 4]);
 				const flatMappedStream = stream.flatMap();
