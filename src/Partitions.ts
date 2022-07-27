@@ -99,21 +99,21 @@ export default class Partitions<T, K, V = T> implements Iterator<[K, Stream<V>]>
 		}
 
 		while (true) {
-			const { done, value } = this.stream.next();
-			if (done) {
+			const result = this.stream.next();
+			if (result.done) {
 				this.done = true;
 				return this;
 			}
 
 			let willContinue = false;
-			const sortedKey = this.sorter(value, this.index++);
+			const sortedKey = this.sorter(result.value, this.index++);
 			if (this._partitions.has(sortedKey)) {
 				willContinue = true;
 			}
 
 			let partition: Partition<V>;
 			[partition, partitionStream] = this.getPartition(sortedKey);
-			partition.add(this.mapper(value, this.index));
+			partition.add(this.mapper(result.value as any as T, this.index));
 
 			if (willContinue) {
 				continue;
@@ -139,13 +139,14 @@ export default class Partitions<T, K, V = T> implements Iterator<[K, Stream<V>]>
 	private getFunctionForRetrievingNextInPartition (key: K) {
 		return () => {
 			while (true) {
-				let { done, value } = this.stream.next();
-				if (done) {
+				const result = this.stream.next();
+				if (result.done) {
 					return { done: true, value: undefined };
 				}
 
+				let value = result.value;
 				const sortedKey = this.sorter(value, this.index++);
-				value = this.mapper(value, this.index);
+				value = this.mapper(value as any as T, this.index);
 				if (sortedKey === key) {
 					return { done: false, value };
 				}

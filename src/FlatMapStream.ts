@@ -10,15 +10,15 @@ export default class FlatMapStream<T, R> implements Iterator<R> {
 	public next () {
 		while (true) {
 			while (!this.subIterable) {
-				const { done, value: nextIterable } = this.stream.next();
-				if (done) {
+				const result = this.stream.next();
+				if (result.done) {
 					this.done = true;
 					return this;
 				}
 
-				let nextPotentialSubiterable: any = nextIterable;
+				let nextPotentialSubiterable: any = result.value;
 				if (this.mapper) {
-					nextPotentialSubiterable = this.mapper(nextIterable, this.index++);
+					nextPotentialSubiterable = this.mapper(result.value, this.index++);
 				}
 
 				if (typeof nextPotentialSubiterable !== "object" || !(Symbol.iterator in nextPotentialSubiterable)) {

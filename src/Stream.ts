@@ -1493,9 +1493,9 @@ class StreamImplementation<T> implements Stream<T> {
 
 		FindNext:
 		while (true) {
-			const { done, value } = this.iterators[this.iteratorIndex].next();
-			this.value = value;
-			if (done) {
+			const result = this.iterators[this.iteratorIndex].next();
+			this.value = result.value;
+			if (result.done) {
 				this.iteratorIndex++;
 				if (this.iteratorIndex >= this.iterators.length) {
 
