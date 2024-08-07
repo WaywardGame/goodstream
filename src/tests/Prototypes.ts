@@ -1,8 +1,9 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import "../build/apply";
-import Stream from "../build/Stream";
-import { tuple } from "../build/util/Arrays";
+import { describe, it } from "mocha";
+import "../apply";
+import Stream from "../Stream";
+import { tuple } from "../util/Arrays";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -214,7 +215,7 @@ describe("apply", () => {
 				.filter(val => !["constructor", "savedNext", "next", "restreamCurrent", "getWithAction"].includes(val))
 				.forEach(functionName => {
 					for (const iterableIterator of iterableIterators()) {
-						expect(typeof (iterableIterator as any)[functionName]).eq("function", `Missing Stream method "${functionName}" in IterableIterator`);
+						expect(typeof (iterableIterator as any)[functionName]).eq("function", `Missing Stream method "${functionName}" in IterableIterator (${iterableIterator.constructor.name})`);
 					}
 				});
 		});

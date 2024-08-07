@@ -9,7 +9,7 @@ function Define<P, K extends keyof P> (proto: P, key: K, implementation: Impleme
 			value: implementation,
 		});
 	} catch (err) {
-		console.error(`Unable to apply prototype ${(proto as any).constructor.name}["${key}"]`, err);
+		console.error(`Unable to apply prototype ${(proto as any).constructor.name}["${String(key)}"]`, err);
 	}
 }
 

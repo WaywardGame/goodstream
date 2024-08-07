@@ -2,14 +2,10 @@
     "compilerOptions": {
         "declaration": true,
         "target": "esnext",
-        "module": "commonjs",
+        "module": "UMD",
+        "outDir": "../build",
         "esModuleInterop": true,
         "experimentalDecorators": true,
-        "plugins": [
-            {
-                "name": "typescript-tslint-plugin"
-            }
-        ],
         "strict": true,
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,

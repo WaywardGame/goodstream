@@ -1,7 +1,7 @@
 {
 	"name": "@wayward/goodstream",
 	"description": "Value streaming made as convenient as possible.",
-	"version": "0.7.2",
+	"version": "0.8.0",
 	"license": "MIT",
 	"main": "Stream.js",
 	"types": "./Stream.d.ts",
@@ -9,28 +9,37 @@
 		"type": "git",
 		"url": "https://github.com/WaywardGame/goodstream"
 	},
+	"engines": {
+		"node": ">=16"
+	},
+	"scripts": {
+		"build": "npx ts-node tasks/utilities/TaskRunner.ts clean meta build",
+		"test": "npx ts-node tasks/utilities/TaskRunner.ts test",
+		"watch": "npx ts-node tasks/utilities/TaskRunner.ts clean meta watch",
+		"clean": "npx ts-node tasks/utilities/TaskRunner.ts clean"
+	},
 	"devDependencies": {
-		"@types/chai-as-promised": "7.1.2",
-		"@types/chai": "4.2.0",
-		"@types/del": "4.0.0",
-		"@types/gulp-mocha": "0.0.32",
-		"@types/gulp": "4.0.6",
-		"@types/mocha": "5.2.7",
-		"@types/node": "12.7.3",
-		"chai-as-promised": "7.1.1",
-		"chai": "4.2.0",
-		"chalk": "2.4.2",
-		"even-more-min": "1.0.1",
-		"gulp-mocha": "7.0.1",
-		"gulp-plumber": "1.2.1",
-		"gulp-typescript": "5.0.1",
-		"gulp": "4.0.2",
-		"merge2": "1.2.4",
-		"mocha": "6.2.0",
-		"ts-node": "8.3.0",
-		"tslint-override": "0.5.1",
-		"tslint": "5.19.0",
-		"typescript-tslint-plugin": "0.5.4",
-		"typescript": "3.6.2"
+		"ts-node": "10.9.2",
+		"typescript": "5.6.0-beta",
+		"del": "6.1.1",
+		"ansicolor": "1.1.100",
+		"eslint": "9.8.0",
+		"@types/eslint": "9.6.0",
+		"@typescript-eslint/eslint-plugin": "8.0.1",
+		"@typescript-eslint/parser": "8.0.1",
+		"eslint-plugin-only-warn": "1.1.0",
+		"@types/node": "20.1.4",
+		"mocha": "10.7.0",
+		"chai": "4.5.0",
+		"chai-as-promised": "7.1.2",
+		"@types/chai": "4.3.17",
+		"@types/mocha": "10.0.7",
+		"@types/chai-as-promised": "7.1.8",
+		"even-more-min": "1.0.1"
+	},
+	"overrides": {
+		"even-more-min": {
+			"mocha": "$mocha"
+		}
 	}
 }

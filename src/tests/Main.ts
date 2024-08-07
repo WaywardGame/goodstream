@@ -1,13 +1,16 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import Stream from "../build/Stream";
-import { tuple } from "../build/util/Arrays";
+import { describe, it } from "mocha";
+import Stream from "../Stream";
+import { tuple } from "../util/Arrays";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-async function sleep<T> (ms: number, returnValue?: T) {
-	return new Promise<T>(resolve => setTimeout(() => resolve(returnValue), ms));
+async function sleep<T> (ms: number): Promise<void>;
+async function sleep<T> (ms: number, returnValue: T): Promise<T>;
+async function sleep (ms: number, returnValue?: any) {
+	return new Promise<any>(resolve => setTimeout(() => resolve(returnValue), ms));
 }
 
 describe("Stream", () => {

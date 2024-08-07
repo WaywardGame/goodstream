@@ -2,17 +2,12 @@ import Stream from "../../Stream";
 import Define from "../../util/Define";
 import { PROTOTYPES_ITERABLE_ITERATOR } from "../../util/Prototypes";
 
-interface StreamMethods<T> {
-	filter: Stream<T>["filter"];
+interface StreamMethodsBuiltinOmitted<T> {
 	filter2: Stream<T>["filter2"];
 	filterNullish: Stream<T>["filterNullish"];
 	filterFalsey: Stream<T>["filterFalsey"];
-	map: Stream<T>["map"];
-	flatMap: Stream<T>["flatMap"];
-	take: Stream<T>["take"];
 	takeWhile: Stream<T>["takeWhile"];
 	takeUntil: Stream<T>["takeUntil"];
-	drop: Stream<T>["drop"];
 	dropWhile: Stream<T>["dropWhile"];
 	dropUntil: Stream<T>["dropUntil"];
 	step: Stream<T>["step"];
@@ -30,8 +25,6 @@ interface StreamMethods<T> {
 	collectStream: Stream<T>["collectStream"];
 	entries: Stream<T>["entries"];
 	any: Stream<T>["any"];
-	some: Stream<T>["some"];
-	every: Stream<T>["every"];
 	all: Stream<T>["all"];
 	none: Stream<T>["none"];
 	includes: Stream<T>["includes"];
@@ -45,9 +38,7 @@ interface StreamMethods<T> {
 	length: Stream<T>["length"];
 	size: Stream<T>["size"];
 	fold: Stream<T>["fold"];
-	reduce: Stream<T>["reduce"];
 	first: Stream<T>["first"];
-	find: Stream<T>["find"];
 	last: Stream<T>["last"];
 	at: Stream<T>["at"];
 	random: Stream<T>["random"];
@@ -55,7 +46,6 @@ interface StreamMethods<T> {
 	splat: Stream<T>["splat"];
 	race: Stream<T>["race"];
 	rest: Stream<T>["rest"];
-	toArray: Stream<T>["toArray"];
 	toSet: Stream<T>["toSet"];
 	toMap: Stream<T>["toMap"];
 	toObject: Stream<T>["toObject"];
@@ -67,14 +57,28 @@ interface StreamMethods<T> {
 	end: Stream<T>["end"];
 	complete: Stream<T>["complete"];
 	flush: Stream<T>["flush"];
-	forEach: Stream<T>["forEach"];
 	splatEach: Stream<T>["splatEach"];
 	hasNext: Stream<T>["hasNext"];
 }
 
+interface StreamMethods<T> extends StreamMethodsBuiltinOmitted<T> {
+	filter: Stream<T>["filter"];
+	map: Stream<T>["map"];
+	flatMap: Stream<T>["flatMap"];
+	take: Stream<T>["take"];
+	drop: Stream<T>["drop"];
+	some: Stream<T>["some"];
+	every: Stream<T>["every"];
+	reduce: Stream<T>["reduce"];
+	find: Stream<T>["find"];
+	toArray: Stream<T>["toArray"];
+	forEach: Stream<T>["forEach"];
+}
+
 declare global {
 	interface IterableIterator<T> extends StreamMethods<T> { }
-	interface Generator<T = unknown, TReturn = any, TNext = unknown> extends StreamMethods<T> { }
+	interface BuiltinIterator<T> extends StreamMethodsBuiltinOmitted<T> { }
+	interface Generator<T> extends StreamMethodsBuiltinOmitted<T> { }
 }
 
 const methods: Extract<keyof IterableIterator<any>, keyof Stream<any>>[] = [

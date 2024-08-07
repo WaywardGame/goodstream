@@ -2,14 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "watch",
+			"label": "Watch",
+			"type": "shell",
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			},
-			"type": "shell",
-			"command": "npx gulp watch",
-			"problemMatcher": []
+			"command": "npm run watch",
+			"problemMatcher": [],
 		}
 	]
 }
