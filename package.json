@@ -1,0 +1,20 @@
+{
+	"name": "@wayward/goodstream",
+	"description": "Value streaming made as convenient as possible.",
+	"version": "0.8.0",
+	"license": "MIT",
+	"main": "Stream.js",
+	"types": "./Stream.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/WaywardGame/goodstream"
+	},
+	"engines": {
+		"node": ">=16"
+	},
+	"overrides": {
+		"even-more-min": {
+			"mocha": "$mocha"
+		}
+	}
+}
