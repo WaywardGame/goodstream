@@ -3,7 +3,7 @@ declare global {
         /**
          * Remove `undefined` values from an array
          */
-        filterNullish(): Exclude<T, undefined>[];
+        filterNullish(): Exclude<T, undefined | null>[];
         /**
          * Remove all falsey values from an array (does not filter out `0` and `""`)
          */
@@ -17,7 +17,7 @@ declare global {
         /**
          * Remove `undefined` and `null` values from an array
          */
-        filterNullish(): Exclude<T, undefined>[];
+        filterNullish(): Exclude<T, undefined | null>[];
         /**
          * Remove all falsey values from an array (does not filter out `0` and `""`)
          */
