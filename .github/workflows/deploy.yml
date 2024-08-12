@@ -19,7 +19,7 @@ jobs:
               page: 1
             });
             
-            if (runs[0]?.status !== 'success') {
+            if (runs[0]?.conclusion !== 'success') {
               throw new Error('Latest build failed, cannot deploy');
             }
 
