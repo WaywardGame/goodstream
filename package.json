@@ -10,7 +10,7 @@
 		"url": "https://github.com/WaywardGame/goodstream"
 	},
 	"engines": {
-		"node": ">=16"
+		"node": ">=20"
 	},
 	"overrides": {
 		"even-more-min": {
