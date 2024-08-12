@@ -10,7 +10,7 @@
 		"url": "https://github.com/WaywardGame/goodstream"
 	},
 	"engines": {
-		"node": ">=16"
+		"node": ">=20"
 	},
 	"scripts": {
 		"build": "npx ts-node tasks/utilities/TaskRunner.ts clean meta build",
