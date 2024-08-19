@@ -39,6 +39,8 @@ describe("apply", () => {
 			it("should return the first item in the array, or undefined if it doesn't exist", () => {
 				expect([1, 2, 3].first()).eq(1);
 				expect([].first()).undefined;
+				expect([1, 2, 3].first(v => `${v}`)).eq("1");
+				expect([].first(v => `${v}`)).undefined;
 			});
 		});
 
@@ -46,6 +48,8 @@ describe("apply", () => {
 			it("should return the last item in the array, or undefined if it doesn't exist", () => {
 				expect([1, 2, 3].last()).eq(3);
 				expect([].last()).undefined;
+				expect([1, 2, 3].last(v => `${v}`)).eq("3");
+				expect([].last(v => `${v}`)).undefined;
 			});
 		});
 
@@ -53,7 +57,14 @@ describe("apply", () => {
 			it("should return the item in the array at the specified index, or undefined if it doesn't exist", () => {
 				expect([1, 2, 3].at(1)).eq(2);
 				expect([1, 2, 3].at(5)).undefined;
+				expect([1, 2, 3].at(-1)).eq(3);
+				expect([1, 2, 3].at(-4)).undefined;
 				expect([].at(0)).undefined;
+				expect([1, 2, 3].at(1, v => `${v}`)).eq("2");
+				expect([1, 2, 3].at(5, v => `${v}`)).undefined;
+				expect([1, 2, 3].at(-1, v => `${v}`)).eq("3");
+				expect([1, 2, 3].at(-4, v => `${v}`)).undefined;
+				expect([].at(0, v => `${v}`)).undefined;
 			});
 		});
 
