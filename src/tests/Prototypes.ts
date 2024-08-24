@@ -198,8 +198,8 @@ describe("apply", () => {
 	});
 
 	describe("iterableIterator", () => {
-		function* iterableIterators () {
-			yield [1, 2, 3, 4, 5].values();
+		function* iterableIterators (includeString = false) {
+			yield [1, 2, 3, 4, 5][Symbol.iterator]();
 			yield new Map([[1, 1], [3, 2], [5, 3], [235, 4], [25, 5]]).values();
 			yield new Set([1, 2, 3, 4, 5]).values();
 			function* generator () {
@@ -210,13 +210,20 @@ describe("apply", () => {
 				yield 5;
 			}
 			yield generator();
+			if (includeString) yield stringIterator();
 		}
+
+		function stringIterator () {
+			return "12345"[Symbol.iterator]();
+		}
+
 		describe("stream", () => {
 			it("should return a stream from this iterable iterator", () => {
 				for (const iterableIterator of iterableIterators()) {
 					const stream = iterableIterator.stream();
 					expect(stream).instanceOf(Stream);
 					expect(stream.toArray()).ordered.members([1, 2, 3, 4, 5]);
+					expect(stringIterator().stream().toArray()).ordered.members(["1", "2", "3", "4", "5"]);
 				}
 			});
 		});
@@ -225,15 +232,15 @@ describe("apply", () => {
 			Object.getOwnPropertyNames(Stream.prototype)
 				.filter(val => !["constructor", "savedNext", "next", "restreamCurrent", "getWithAction"].includes(val))
 				.forEach(functionName => {
-					for (const iterableIterator of iterableIterators()) {
+					for (const iterableIterator of iterableIterators(true)) {
 						expect(typeof (iterableIterator as any)[functionName]).eq("function", `Missing Stream method "${functionName}" in IterableIterator (${iterableIterator.constructor.name})`);
 					}
 				});
 		});
 
 		it("should call the map method in the stream correctly", () => {
-			for (const iterableIterator of iterableIterators()) {
-				expect(iterableIterator.map(x => x + 4).toArray()).ordered.members([5, 6, 7, 8, 9]);
+			for (const iterableIterator of iterableIterators(true)) {
+				expect(iterableIterator.map(x => +x + 4).toArray()).ordered.members([5, 6, 7, 8, 9]);
 			}
 		});
 

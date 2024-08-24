@@ -61,27 +61,13 @@ interface StreamMethodsBuiltinOmitted<T> {
 	hasNext: Stream<T>["hasNext"];
 }
 
-interface StreamMethods<T> extends StreamMethodsBuiltinOmitted<T> {
-	filter: Stream<T>["filter"];
-	map: Stream<T>["map"];
-	flatMap: Stream<T>["flatMap"];
-	take: Stream<T>["take"];
-	drop: Stream<T>["drop"];
-	some: Stream<T>["some"];
-	every: Stream<T>["every"];
-	reduce: Stream<T>["reduce"];
-	find: Stream<T>["find"];
-	toArray: Stream<T>["toArray"];
-	forEach: Stream<T>["forEach"];
-}
-
 declare global {
-	interface IterableIterator<T> extends StreamMethods<T> { }
-	interface BuiltinIterator<T> extends StreamMethodsBuiltinOmitted<T> { }
+	interface IterableIterator<T> extends StreamMethodsBuiltinOmitted<T> { }
+	interface IteratorObject<T> extends StreamMethodsBuiltinOmitted<T> { }
 	interface Generator<T> extends StreamMethodsBuiltinOmitted<T> { }
 }
 
-const methods: Extract<keyof IterableIterator<any>, keyof Stream<any>>[] = [
+const methods: (keyof Stream<any>)[] = [
 	"filter",
 	"filter2",
 	"filterNullish",
@@ -152,7 +138,7 @@ const methods: Extract<keyof IterableIterator<any>, keyof Stream<any>>[] = [
 ];
 
 for (const method of methods) {
-	Define.all(PROTOTYPES_ITERABLE_ITERATOR, method, function (...args) {
+	Define.all(PROTOTYPES_ITERABLE_ITERATOR, method as keyof IterableIterator<any>, function (...args) {
 		return (Stream.from(this)[method] as (...args: any) => never)(...args);
 	});
 }
