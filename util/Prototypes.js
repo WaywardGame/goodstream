@@ -13,7 +13,8 @@
     exports.PROTOTYPES_ITERABLE_ITERATOR = [
         Object.getPrototypeOf(function* () { }).prototype,
         Object.getPrototypeOf([][Symbol.iterator]()),
-        Object.getPrototypeOf(new Map().keys()),
-        Object.getPrototypeOf(new Set().values()),
+        Object.getPrototypeOf(new Map()[Symbol.iterator]()),
+        Object.getPrototypeOf(new Set()[Symbol.iterator]()),
+        Object.getPrototypeOf(""[Symbol.iterator]()),
     ];
 });

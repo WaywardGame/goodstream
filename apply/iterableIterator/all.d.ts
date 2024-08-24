@@ -57,23 +57,10 @@ interface StreamMethodsBuiltinOmitted<T> {
     splatEach: Stream<T>["splatEach"];
     hasNext: Stream<T>["hasNext"];
 }
-interface StreamMethods<T> extends StreamMethodsBuiltinOmitted<T> {
-    filter: Stream<T>["filter"];
-    map: Stream<T>["map"];
-    flatMap: Stream<T>["flatMap"];
-    take: Stream<T>["take"];
-    drop: Stream<T>["drop"];
-    some: Stream<T>["some"];
-    every: Stream<T>["every"];
-    reduce: Stream<T>["reduce"];
-    find: Stream<T>["find"];
-    toArray: Stream<T>["toArray"];
-    forEach: Stream<T>["forEach"];
-}
 declare global {
-    interface IterableIterator<T> extends StreamMethods<T> {
+    interface IterableIterator<T> extends StreamMethodsBuiltinOmitted<T> {
     }
-    interface BuiltinIterator<T> extends StreamMethodsBuiltinOmitted<T> {
+    interface IteratorObject<T> extends StreamMethodsBuiltinOmitted<T> {
     }
     interface Generator<T> extends StreamMethodsBuiltinOmitted<T> {
     }

@@ -10,7 +10,7 @@ export default class Partitions<T, K, V = T> implements Iterator<[K, Stream<V>]>
     private readonly partitionKeys;
     private partitionKeyIndex;
     private index;
-    constructor(stream: Iterator<V>, sorter: (val: V, index: number) => K, mapper: (val: T, index: number) => V, streamMapper: <V2>(val: Iterator<V2>) => Stream<V2>);
+    constructor(stream: Iterator<V>, sorter: (val: V, index: number) => K, mapper: ((val: T, index: number) => V) | undefined, streamMapper: <V2>(val: Iterator<V2>) => Stream<V2>);
     /**
      * Returns a single partitioned Stream by the given key.
      * @param key The key of the partitioned Stream.
